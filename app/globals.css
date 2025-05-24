@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-color: #0a0a0a;
+  --accent-color: #1a1a1a;
+  --primary-color: #00ff88;
+  --text-color: #e0e0e0;
+  --border-color: #333333;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: "Inter", system-ui, sans-serif;
+  /* Remove overflow: hidden to allow scrolling */
+  min-height: 100vh;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Gutter styling for react-split */
+.gutter {
+  background-color: var(--border-color);
+  background-repeat: no-repeat;
+  background-position: 50%;
+}
+
+.gutter.gutter-horizontal {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==");
+  cursor: col-resize;
+}
+
+.gutter.gutter-vertical {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=");
+  cursor: row-resize;
+}
+
+/* Editor container should have overflow hidden */
+.editor-container {
+  overflow: hidden;
+}
+
+/* Canvas styles for reels */
+.canvas-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.portrait-frame {
+  aspect-ratio: 9 / 16;
+  background-color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.landscape-frame {
+  aspect-ratio: 16 / 9;
+  background-color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.square-frame {
+  aspect-ratio: 1 / 1;
+  background-color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Recording indicator */
+.recording-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #ff0000;
+  animation: pulse 1s infinite;
+  z-index: 100;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
