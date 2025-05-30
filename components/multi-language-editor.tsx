@@ -11,12 +11,16 @@ interface MultiLanguageEditorProps {
 }
 
 export default function MultiLanguageEditor({ mode, files, onFileChange }: MultiLanguageEditorProps) {
-  const [activeFile, setActiveFile] = useState<string>(files[0]?.path || "")
+  const [activeFile, setActiveFile] = useState<string>("")
 
   // Update active file when files change
   useEffect(() => {
-    if (files.length > 0 && !files.some((file) => file.path === activeFile)) {
-      setActiveFile(files[0].path)
+    if (files.length > 0) {
+      if (!activeFile || !files.some((file) => file.path === activeFile)) {
+        setActiveFile(files[0].path)
+      }
+    } else {
+      setActiveFile("")
     }
   }, [files, activeFile])
 
@@ -49,15 +53,29 @@ export default function MultiLanguageEditor({ mode, files, onFileChange }: Multi
   }
 
   const handleCodeChange = (value: string) => {
-    onFileChange(activeFile, value)
+    if (activeFile) {
+      onFileChange(activeFile, value)
+    }
   }
 
-  const activeFileContent = files.find((file) => file.path === activeFile)?.content || ""
-  const editorMode = getEditorMode(activeFile)
+  // If no files, show empty state
+  if (!files || files.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center bg-[#0a0a0a] text-gray-400">
+        <div className="text-center">
+          <p>No files to edit</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If no active file is set, use the first file
+  const currentActiveFile = activeFile || files[0]?.path || ""
+  const activeFileContent = files.find((file) => file.path === currentActiveFile)?.content || ""
 
   return (
     <div className="flex flex-col h-full">
-      <Tabs value={activeFile} onValueChange={setActiveFile} className="h-full flex flex-col">
+      <Tabs value={currentActiveFile} onValueChange={setActiveFile} className="h-full flex flex-col">
         <div className="bg-[#0a0a0a] border-b border-[#333333] overflow-x-auto">
           <TabsList className="bg-transparent h-9">
             {files.map((file) => (

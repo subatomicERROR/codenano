@@ -102,89 +102,65 @@ const getLanguageFromFileName = (fileName: string): string => {
 const createDefaultProject = (): Project => ({
   id: "default",
   name: "My Project",
-  description: "A new CodeNANO project",
+  description: "A clean HTML, CSS, and JavaScript project with Tailwind CSS",
   mode: "html",
   files: [
     {
       id: "html-1",
       name: "index.html",
-      content: `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeNANO Project</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 Welcome to CodeNANO</h1>
-        <p>The most advanced code editor for modern developers</p>
-        <button onclick="greet()" class="btn">Click me!</button>
+      content: `<div class="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+  <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+    <h1 class="text-3xl font-bold text-gray-800 mb-4 text-center">
+      Welcome to CodeNANO
+    </h1>
+    <p class="text-gray-600 mb-6 text-center">
+      Start building amazing projects with HTML, CSS, JavaScript, and Tailwind CSS!
+    </p>
+    <button 
+      onclick="showMessage()" 
+      class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-300 transform hover:scale-105"
+    >
+      Click Me!
+    </button>
+    <div id="message" class="mt-4 p-4 bg-green-100 text-green-800 rounded-lg hidden">
+      🎉 Great! You can copy-paste any code from ChatGPT here!
     </div>
-    <script src="script.js"></script>
-</body>
-</html>`,
+  </div>
+</div>`,
       language: "html",
       isModified: false,
     },
     {
       id: "css-1",
       name: "style.css",
-      content: `* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+      content: `/* Custom CSS - Tailwind CSS is already included! */
+
+/* You can add custom styles here */
+.custom-animation {
+  animation: fadeIn 0.5s ease-in-out;
 }
 
-body {
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-    color: #ffffff;
-    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.container {
-    text-align: center;
-    max-width: 600px;
-    padding: 2rem;
+/* Custom hover effects */
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 }
 
-h1 {
-    font-size: 3rem;
-    background: linear-gradient(45deg, #00ff88, #00ccff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 1rem;
-    font-weight: 700;
-}
-
-p {
-    font-size: 1.2rem;
-    color: #cccccc;
-    margin-bottom: 2rem;
-    line-height: 1.6;
-}
-
-.btn {
-    background: linear-gradient(45deg, #00ff88, #00ccff);
-    color: #000;
-    border: none;
-    padding: 1rem 2rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0, 255, 136, 0.4);
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .mobile-text {
+    font-size: 1.25rem;
+  }
 }`,
       language: "css",
       isModified: false,
@@ -192,39 +168,48 @@ p {
     {
       id: "js-1",
       name: "script.js",
-      content: `// Welcome to CodeNANO - The future of coding!
+      content: `// JavaScript with Tailwind CSS integration
+console.log('🚀 CodeNANO loaded with Tailwind CSS!');
 
-function greet() {
-    const messages = [
-        "🚀 Welcome to the future of coding!",
-        "💡 CodeNANO: Where ideas become reality",
-        "⚡ Lightning-fast development at your fingertips",
-        "🎯 Precision coding for modern developers",
-        "🌟 Your next breakthrough starts here!"
-    ];
-    
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    alert(randomMessage);
-    
-    console.log("🎉 CodeNANO is ready for action!");
-    console.log("✨ Start building something amazing!");
+function showMessage() {
+  const messageDiv = document.getElementById('message');
+  messageDiv.classList.remove('hidden');
+  messageDiv.classList.add('custom-animation');
+  
+  // Add some interactive effects
+  setTimeout(() => {
+    messageDiv.style.background = 'linear-gradient(45deg, #10b981, #3b82f6)';
+    messageDiv.style.color = 'white';
+  }, 500);
+  
+  console.log('✨ Message shown!');
 }
 
-// Initialize the app
+// Example: Dynamic Tailwind classes
+function addDynamicContent() {
+  const container = document.querySelector('.bg-white');
+  
+  const newElement = document.createElement('div');
+  newElement.className = 'mt-4 p-4 bg-yellow-100 text-yellow-800 rounded-lg border-l-4 border-yellow-500';
+  newElement.innerHTML = '💡 <strong>Tip:</strong> You can copy-paste any HTML/CSS/JS code here!';
+  
+  container.appendChild(newElement);
+}
+
+// Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("🚀 CodeNANO Editor Loaded Successfully!");
-    console.log("💻 Happy coding!");
-});
-
-// Example of modern JavaScript features
-const features = {
-    editor: "Monaco Editor",
-    languages: ["HTML", "CSS", "JavaScript", "TypeScript", "Python", "React"],
-    preview: "Real-time",
-    performance: "Lightning fast"
-};
-
-console.table(features);`,
+  console.log('📝 Ready for copy-paste coding!');
+  
+  // Example of using Tailwind classes dynamically
+  const button = document.querySelector('button');
+  button.addEventListener('mouseenter', () => {
+    button.classList.add('shadow-lg');
+  });
+  
+  button.addEventListener('mouseleave', () => {
+    button.classList.remove('shadow-lg');
+  });
+});`,
       language: "javascript",
       isModified: false,
     },
@@ -240,7 +225,7 @@ export const useEditorStore = create<EditorState>()(
       currentProject: null,
       projects: [],
       activeFileId: null,
-      sidebarOpen: true,
+      sidebarOpen: false,
       consoleOpen: false,
       previewMode: "split",
       consoleMessages: [],

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Code, Clock, Settings, Trash2, Bookmark, Video, Camera, Loader2, AlertTriangle } from "lucide-react"
+import { Plus, Code, Clock, Settings, Trash2, Bookmark, Camera, Loader2, AlertTriangle } from "lucide-react"
 import DashboardNavbar from "@/components/dashboard-navbar"
 import { useToast } from "@/hooks/use-toast"
 import { getBrowserClient } from "@/lib/supabase"
@@ -16,7 +16,6 @@ import DatabaseInitializer from "@/components/db-initializer"
 export default function Dashboard() {
   const [projects, setProjects] = useState<any[]>([])
   const [savedProjects, setSavedProjects] = useState<any[]>([])
-  const [savedReels, setSavedReels] = useState<any[]>([])
   const [savedPosts, setSavedPosts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
@@ -167,27 +166,6 @@ export default function Dashboard() {
         }
       }
 
-      // Check reels table
-      const { error: reelsError } = await supabase.from("reels").select("count").limit(1)
-      if (reelsError && reelsError.message.includes("does not exist")) {
-        missing.push("reels")
-        setSavedReels([])
-      } else {
-        // Fetch reels
-        try {
-          const { data } = await supabase
-            .from("reels")
-            .select("*")
-            .eq("user_id", session.user.id)
-            .order("created_at", { ascending: false })
-
-          setSavedReels(data || [])
-        } catch (error) {
-          console.error("Error fetching reels:", error)
-          setSavedReels([])
-        }
-      }
-
       // Check posts table
       const { error: postsError } = await supabase.from("posts").select("count").limit(1)
       if (postsError && postsError.message.includes("does not exist")) {
@@ -281,39 +259,6 @@ export default function Dashboard() {
       toast({
         title: "Error",
         description: error.message || "Failed to remove pen from collection",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const removeSavedReel = async (reelId: string) => {
-    try {
-      // Check if saved_reels table exists
-      const { error: checkError } = await supabase.from("saved_reels").select("count").limit(1)
-      if (checkError && checkError.message.includes("does not exist")) {
-        toast({
-          title: "Error",
-          description: "Saved reels table doesn't exist",
-          variant: "destructive",
-        })
-        return
-      }
-
-      const { error } = await supabase.from("saved_reels").delete().eq("user_id", user.id).eq("reel_id", reelId)
-
-      if (error) throw error
-
-      setSavedReels(savedReels.filter((reel) => reel.id !== reelId))
-
-      toast({
-        title: "Removed from collection",
-        description: "The reel has been removed from your collection",
-      })
-    } catch (error: any) {
-      console.error("Remove saved reel error:", error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to remove reel from collection",
         variant: "destructive",
       })
     }
@@ -434,9 +379,6 @@ export default function Dashboard() {
             <TabsTrigger value="saved" className="data-[state=active]:bg-[#00ff88] data-[state=active]:text-black">
               Saved Collection
             </TabsTrigger>
-            <TabsTrigger value="reels" className="data-[state=active]:bg-[#00ff88] data-[state=active]:text-black">
-              Reels
-            </TabsTrigger>
             <TabsTrigger value="posts" className="data-[state=active]:bg-[#00ff88] data-[state=active]:text-black">
               Posts
             </TabsTrigger>
@@ -511,45 +453,6 @@ export default function Dashboard() {
                     onOpen={() => openProject(project)}
                     isOwner={false}
                     isSaved={true}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="reels" className="mt-6">
-            {missingTables.includes("reels") ? (
-              <div className="text-center py-12">
-                <p className="text-[#e0e0e0]/70 mb-4">Reels table doesn't exist yet.</p>
-                <Link href="/convert-to-reel">
-                  <Button className="bg-[#00ff88] text-black hover:bg-[#00cc77]">
-                    <Video className="mr-2 h-4 w-4" /> Create a Reel
-                  </Button>
-                </Link>
-              </div>
-            ) : savedReels.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-[#e0e0e0]/70 mb-4">You haven't saved any reels yet.</p>
-                <Link href="/convert-to-reel">
-                  <Button className="bg-[#00ff88] text-black hover:bg-[#00cc77]">
-                    <Video className="mr-2 h-4 w-4" /> Create a Reel
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {savedReels.map((reel) => (
-                  <ReelCard
-                    key={reel.id}
-                    reel={{
-                      id: reel.id,
-                      title: reel.title,
-                      description: reel.description,
-                      lastEdited: formatDate(reel.updated_at || reel.created_at),
-                      videoUrl: reel.video_url,
-                      thumbnail: reel.thumbnail_url || "/placeholder.svg?height=200&width=300",
-                    }}
-                    onDelete={() => removeSavedReel(reel.id)}
                   />
                 ))}
               </div>
@@ -665,55 +568,6 @@ function ProjectCard({ project, onDelete, onOpen, isOwner, isSaved = false }: Pr
             </Button>
           )}
         </div>
-      </CardFooter>
-    </Card>
-  )
-}
-
-interface ReelCardProps {
-  reel: {
-    id: string
-    title: string
-    description: string
-    lastEdited: string
-    videoUrl: string
-    thumbnail: string
-  }
-  onDelete: () => void
-}
-
-function ReelCard({ reel, onDelete }: ReelCardProps) {
-  return (
-    <Card className="bg-[#1a1a1a] border-[#333333] overflow-hidden">
-      <div className="h-40 overflow-hidden">
-        <img
-          src={reel.thumbnail || "/placeholder.svg"}
-          alt={reel.title}
-          className="w-full h-full object-cover transition-transform hover:scale-105"
-        />
-      </div>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl">{reel.title}</CardTitle>
-      </CardHeader>
-      <CardContent className="pb-2">
-        <p className="text-sm text-[#e0e0e0]/70">{reel.description}</p>
-        <div className="flex items-center gap-4 mt-4 text-xs text-[#e0e0e0]/60">
-          <div className="flex items-center">
-            <Clock className="h-3 w-3 mr-1" />
-            {reel.lastEdited}
-          </div>
-          <div className="px-2 py-0.5 bg-[#00ff88]/10 text-[#00ff88] rounded-full text-xs">Reel</div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Link href={reel.videoUrl} target="_blank">
-          <Button variant="outline" size="sm" className="border-[#333333] hover:bg-[#252525]">
-            <Video className="h-4 w-4 mr-2" /> View Reel
-          </Button>
-        </Link>
-        <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-500/10" onClick={onDelete}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
       </CardFooter>
     </Card>
   )

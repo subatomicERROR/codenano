@@ -1,292 +1,311 @@
 "use client"
 
-import { useEffect, useRef, useCallback } from "react"
-import { loader } from "@monaco-editor/react"
+import { useRef, useState, useCallback } from "react"
+import { Editor } from "@monaco-editor/react"
+import { useTheme } from "next-themes"
 
 interface MonacoEditorProps {
   value: string
   language: string
   onChange: (value: string) => void
-  onSave: () => void
+  options?: any
 }
 
-export default function MonacoEditor({ value, language, onChange, onSave }: MonacoEditorProps) {
+export default function MonacoEditor({ value, language, onChange, options = {} }: MonacoEditorProps) {
   const editorRef = useRef<any>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const isUpdatingRef = useRef(false)
-  const lastValueRef = useRef(value)
+  const [isLoading, setIsLoading] = useState(true)
+  const { theme } = useTheme()
 
-  const handleEditorChange = useCallback(
-    (newValue: string) => {
-      if (isUpdatingRef.current) return
-      if (newValue === lastValueRef.current) return
+  const handleEditorDidMount = useCallback(
+    (editor: any, monaco: any) => {
+      editorRef.current = editor
+      setIsLoading(false)
 
-      lastValueRef.current = newValue
-      onChange(newValue)
-    },
-    [onChange],
-  )
-
-  const handleSave = useCallback(() => {
-    onSave()
-  }, [onSave])
-
-  useEffect(() => {
-    if (!containerRef.current) return
-
-    let editor: any = null
-
-    // Configure Monaco loader
-    loader.config({
-      paths: {
-        vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs",
-      },
-    })
-
-    loader.init().then((monaco) => {
-      if (!containerRef.current) return
-
-      // Define custom theme
+      // Define custom CodeNANO theme
       monaco.editor.defineTheme("codenano-dark", {
         base: "vs-dark",
         inherit: true,
         rules: [
-          { token: "comment", foreground: "6A9955" },
-          { token: "keyword", foreground: "569CD6" },
+          { token: "comment", foreground: "6A9955", fontStyle: "italic" },
+          { token: "keyword", foreground: "569CD6", fontStyle: "bold" },
           { token: "string", foreground: "CE9178" },
           { token: "number", foreground: "B5CEA8" },
+          { token: "regexp", foreground: "D16969" },
           { token: "type", foreground: "4EC9B0" },
           { token: "class", foreground: "4EC9B0" },
           { token: "function", foreground: "DCDCAA" },
           { token: "variable", foreground: "9CDCFE" },
+          { token: "constant", foreground: "4FC1FF" },
+          { token: "property", foreground: "9CDCFE" },
+          { token: "operator", foreground: "D4D4D4" },
+          { token: "tag", foreground: "569CD6" },
+          { token: "attribute.name", foreground: "92C5F8" },
+          { token: "attribute.value", foreground: "CE9178" },
         ],
         colors: {
           "editor.background": "#0a0a0a",
-          "editor.foreground": "#d4d4d4",
-          "editorLineNumber.foreground": "#858585",
-          "editorLineNumber.activeForeground": "#c6c6c6",
-          "editor.selectionBackground": "#264f78",
-          "editor.selectionHighlightBackground": "#add6ff26",
+          "editor.foreground": "#e0e0e0",
+          "editor.lineHighlightBackground": "#1a1a1a",
+          "editor.selectionBackground": "#00ff8830",
+          "editor.selectionHighlightBackground": "#00ff8820",
+          "editor.findMatchBackground": "#00ff8840",
+          "editor.findMatchHighlightBackground": "#00ff8820",
           "editorCursor.foreground": "#00ff88",
-          "editor.findMatchBackground": "#515c6a",
-          "editor.findMatchHighlightBackground": "#ea5c0055",
-          "editor.findRangeHighlightBackground": "#3a3d4166",
-          "editorHoverWidget.background": "#252526",
-          "editorHoverWidget.border": "#454545",
-          "editorSuggestWidget.background": "#252526",
-          "editorSuggestWidget.border": "#454545",
-          "editorSuggestWidget.selectedBackground": "#094771",
-          "editorWidget.background": "#252526",
-          "editorWidget.border": "#454545",
-          "input.background": "#3c3c3c",
-          "input.border": "#3c3c3c",
-          "inputOption.activeBorder": "#007acc",
-          "scrollbarSlider.background": "#79797966",
-          "scrollbarSlider.hoverBackground": "#646464b3",
-          "scrollbarSlider.activeBackground": "#bfbfbf66",
-          "progressBar.background": "#0e70c0",
+          "editorLineNumber.foreground": "#666666",
+          "editorLineNumber.activeForeground": "#00ff88",
+          "editorIndentGuide.background": "#333333",
+          "editorIndentGuide.activeBackground": "#00ff88",
+          "editorWhitespace.foreground": "#333333",
+          "editorBracketMatch.background": "#00ff8830",
+          "editorBracketMatch.border": "#00ff88",
+          "scrollbarSlider.background": "#33333380",
+          "scrollbarSlider.hoverBackground": "#555555",
+          "scrollbarSlider.activeBackground": "#00ff88",
         },
       })
 
-      // Create editor
-      editor = monaco.editor.create(containerRef.current, {
-        value,
-        language: getMonacoLanguage(language),
-        theme: "codenano-dark",
+      // Set the custom theme
+      monaco.editor.setTheme("codenano-dark")
+
+      // Enhanced editor configuration
+      editor.updateOptions({
         fontSize: 14,
-        fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace",
-        lineNumbers: "on",
-        roundedSelection: false,
+        lineHeight: 1.6,
+        fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace",
+        fontLigatures: true,
+        smoothScrolling: true,
+        cursorBlinking: "smooth",
+        cursorSmoothCaretAnimation: true,
+        minimap: { enabled: false },
         scrollBeyondLastLine: false,
-        minimap: { enabled: true },
+        wordWrap: "on",
+        lineNumbers: "on",
+        glyphMargin: false,
+        folding: true,
+        lineDecorationsWidth: 0,
+        lineNumbersMinChars: 3,
+        renderLineHighlight: "gutter",
+        selectOnLineNumbers: true,
         automaticLayout: true,
         tabSize: 2,
         insertSpaces: true,
-        wordWrap: "on",
-        contextmenu: true,
-        mouseWheelZoom: true,
-        smoothScrolling: true,
-        cursorBlinking: "smooth",
-        cursorSmoothCaretAnimation: "on",
-        renderLineHighlight: "gutter",
-        selectOnLineNumbers: true,
-        glyphMargin: true,
-        folding: true,
-        foldingHighlight: true,
-        showFoldingControls: "always",
-        unfoldOnClickAfterEndOfLine: true,
-        bracketPairColorization: { enabled: true },
-        guides: {
-          bracketPairs: true,
-          bracketPairsHorizontal: true,
-          highlightActiveBracketPair: true,
-          indentation: true,
-        },
+        detectIndentation: true,
+        trimAutoWhitespace: true,
+        formatOnPaste: true,
+        formatOnType: true,
+        suggestOnTriggerCharacters: true,
+        acceptSuggestionOnEnter: "on",
+        acceptSuggestionOnCommitCharacter: true,
+        snippetSuggestions: "top",
+        emptySelectionClipboard: false,
+        copyWithSyntaxHighlighting: true,
+        multiCursorModifier: "ctrlCmd",
+        accessibilitySupport: "auto",
+        ...options,
       })
 
-      editorRef.current = editor
-      lastValueRef.current = value
-
-      // Handle content changes with debouncing
-      let changeTimeout: NodeJS.Timeout
-      editor.onDidChangeModelContent(() => {
-        if (isUpdatingRef.current) return
-
-        clearTimeout(changeTimeout)
-        changeTimeout = setTimeout(() => {
-          const newValue = editor.getValue()
-          handleEditorChange(newValue)
-        }, 100)
-      })
-
-      // Add save shortcut
+      // Add enhanced keyboard shortcuts
       editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-        handleSave()
+        // Trigger save
+        window.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key: "s",
+            ctrlKey: true,
+            metaKey: true,
+          }),
+        )
       })
 
-      // Add format shortcut
-      editor.addCommand(monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyF, () => {
-        editor.getAction("editor.action.formatDocument")?.run()
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyR, () => {
+        // Trigger run
+        window.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key: "r",
+            ctrlKey: true,
+            metaKey: true,
+          }),
+        )
       })
 
-      // Add comment toggle shortcut
-      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Slash, () => {
-        editor.getAction("editor.action.commentLine")?.run()
-      })
-
-      // Configure language-specific features
-      configureLanguageFeatures(monaco, language)
-    })
-
-    return () => {
-      if (editor) {
-        editor.dispose()
-      }
-    }
-  }, []) // Only run once on mount
-
-  // Update editor value when prop changes (but prevent loops)
-  useEffect(() => {
-    if (editorRef.current && value !== lastValueRef.current) {
-      isUpdatingRef.current = true
-      editorRef.current.setValue(value)
-      lastValueRef.current = value
-      setTimeout(() => {
-        isUpdatingRef.current = false
-      }, 50)
-    }
-  }, [value])
-
-  // Update editor language when prop changes
-  useEffect(() => {
-    if (editorRef.current) {
-      const model = editorRef.current.getModel()
-      if (model) {
-        loader.init().then((monaco) => {
-          monaco.editor.setModelLanguage(model, getMonacoLanguage(language))
-          configureLanguageFeatures(monaco, language)
+      // Enhanced auto-completion for HTML
+      if (language === "html") {
+        monaco.languages.registerCompletionItemProvider("html", {
+          provideCompletionItems: (model, position) => {
+            const suggestions = [
+              {
+                label: "tailwind-container",
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: '<div class="container mx-auto px-4">\n\t$0\n</div>',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "Tailwind CSS container with auto margins and padding",
+              },
+              {
+                label: "tailwind-flex-center",
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: '<div class="flex items-center justify-center">\n\t$0\n</div>',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "Flexbox container with centered content",
+              },
+              {
+                label: "tailwind-grid",
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">\n\t$0\n</div>',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "Responsive grid layout",
+              },
+              {
+                label: "tailwind-button",
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText:
+                  '<button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300">\n\t$0\n</button>',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "Styled button with hover effects",
+              },
+              {
+                label: "tailwind-card",
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText:
+                  '<div class="bg-white rounded-lg shadow-lg p-6 transition-transform duration-300 hover:scale-105">\n\t$0\n</div>',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "Card component with shadow and hover effect",
+              },
+            ]
+            return { suggestions }
+          },
         })
       }
-    }
-  }, [language])
 
-  return <div ref={containerRef} className="w-full h-full" />
-}
-
-function getMonacoLanguage(language: string): string {
-  switch (language) {
-    case "jsx":
-      return "javascript"
-    case "tsx":
-      return "typescript"
-    case "vue":
-      return "html"
-    case "svelte":
-      return "html"
-    default:
-      return language
-  }
-}
-
-function configureLanguageFeatures(monaco: any, language: string) {
-  // Configure TypeScript/JavaScript
-  if (language === "javascript" || language === "jsx" || language === "typescript" || language === "tsx") {
-    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-      target: monaco.languages.typescript.ScriptTarget.ES2020,
-      allowNonTsExtensions: true,
-      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-      module: monaco.languages.typescript.ModuleKind.CommonJS,
-      noEmit: true,
-      esModuleInterop: true,
-      jsx: monaco.languages.typescript.JsxEmit.React,
-      reactNamespace: "React",
-      allowJs: true,
-      typeRoots: ["node_modules/@types"],
-    })
-
-    // Add React types
-    const reactTypes = `
-      declare module 'react' {
-        export interface Component<P = {}, S = {}> {}
-        export function useState<T>(initialState: T | (() => T)): [T, (value: T | ((prev: T) => T)) => void];
-        export function useEffect(effect: () => void | (() => void), deps?: any[]): void;
-        export function useCallback<T extends (...args: any[]) => any>(callback: T, deps: any[]): T;
-        export function useMemo<T>(factory: () => T, deps: any[]): T;
-        export function useRef<T>(initialValue: T): { current: T };
-        export const createElement: any;
-        export default any;
+      // Enhanced auto-completion for CSS
+      if (language === "css") {
+        monaco.languages.registerCompletionItemProvider("css", {
+          provideCompletionItems: (model, position) => {
+            const suggestions = [
+              {
+                label: "smooth-transition",
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: "transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);",
+                documentation: "Smooth transition with easing",
+              },
+              {
+                label: "glass-effect",
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText:
+                  "backdrop-filter: blur(10px);\nbackground: rgba(255, 255, 255, 0.1);\nborder: 1px solid rgba(255, 255, 255, 0.2);",
+                documentation: "Glass morphism effect",
+              },
+              {
+                label: "gradient-text",
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText:
+                  "background: linear-gradient(45deg, #00ff88, #00ccff);\n-webkit-background-clip: text;\n-webkit-text-fill-color: transparent;",
+                documentation: "Gradient text effect",
+              },
+            ]
+            return { suggestions }
+          },
+        })
       }
-    `
 
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(reactTypes, "react.d.ts")
-  }
+      // Enhanced auto-completion for JavaScript
+      if (language === "javascript") {
+        monaco.languages.registerCompletionItemProvider("javascript", {
+          provideCompletionItems: (model, position) => {
+            const suggestions = [
+              {
+                label: "console-group",
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: 'console.group("$1");\n$0\nconsole.groupEnd();',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "Console group for organized logging",
+              },
+              {
+                label: "async-function",
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText:
+                  'async function $1() {\n\ttry {\n\t\t$0\n\t} catch (error) {\n\t\tconsole.error("Error:", error);\n\t}\n}',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "Async function with error handling",
+              },
+              {
+                label: "dom-ready",
+                kind: monaco.languages.CompletionItemKind.Snippet,
+                insertText: 'document.addEventListener("DOMContentLoaded", function() {\n\t$0\n});',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: "DOM ready event listener",
+              },
+            ]
+            return { suggestions }
+          },
+        })
+      }
 
-  // Configure HTML
-  if (language === "html") {
-    monaco.languages.html.htmlDefaults.setOptions({
-      format: {
-        tabSize: 2,
-        insertSpaces: true,
-        wrapLineLength: 120,
-        unformatted: "default",
-        contentUnformatted: "pre,code,textarea",
-        indentInnerHtml: false,
-        preserveNewLines: true,
-        maxPreserveNewLines: 2,
-        indentHandlebars: false,
-        endWithNewline: false,
-        extraLiners: "head, body, /html",
-        wrapAttributes: "auto",
-      },
-      suggest: { html5: true },
-      validate: true,
-    })
-  }
+      // Add smooth scrolling behavior
+      editor.onDidScrollChange(() => {
+        const scrollTop = editor.getScrollTop()
+        editor.setScrollTop(scrollTop, 1) // Smooth scroll
+      })
 
-  // Configure CSS
-  if (language === "css") {
-    monaco.languages.css.cssDefaults.setOptions({
-      validate: true,
-      lint: {
-        compatibleVendorPrefixes: "ignore",
-        vendorPrefix: "warning",
-        duplicateProperties: "warning",
-        emptyRules: "warning",
-        importStatement: "ignore",
-        boxModel: "ignore",
-        universalSelector: "ignore",
-        zeroUnits: "ignore",
-        fontFaceProperties: "warning",
-        hexColorLength: "error",
-        argumentsInColorFunction: "error",
-        unknownProperties: "warning",
-        ieHack: "ignore",
-        unknownVendorSpecificProperties: "ignore",
-        propertyIgnoredDueToDisplay: "warning",
-        important: "ignore",
-        float: "ignore",
-        idSelector: "ignore",
-      },
-    })
-  }
+      // Enhanced error handling
+      editor.onDidChangeModelContent(() => {
+        const model = editor.getModel()
+        if (model) {
+          const value = model.getValue()
+          onChange(value)
+        }
+      })
+    },
+    [onChange, language, options],
+  )
+
+  const handleEditorChange = useCallback(
+    (value: string | undefined) => {
+      if (value !== undefined) {
+        onChange(value)
+      }
+    },
+    [onChange],
+  )
+
+  return (
+    <div className="relative h-full w-full">
+      {isLoading && (
+        <div className="absolute inset-0 bg-[#0a0a0a] flex items-center justify-center z-10">
+          <div className="text-center text-white">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#00ff88] mx-auto mb-2"></div>
+            <p className="text-sm text-gray-400">Loading editor...</p>
+          </div>
+        </div>
+      )}
+
+      <Editor
+        height="100%"
+        language={language}
+        value={value}
+        onChange={handleEditorChange}
+        onMount={handleEditorDidMount}
+        theme="codenano-dark"
+        loading={
+          <div className="flex items-center justify-center h-full bg-[#0a0a0a]">
+            <div className="text-center text-white">
+              <div className="animate-pulse text-[#00ff88] text-2xl mb-2">⚡</div>
+              <p className="text-sm text-gray-400">Initializing Monaco Editor...</p>
+            </div>
+          </div>
+        }
+        options={{
+          fontSize: 14,
+          lineHeight: 1.6,
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          smoothScrolling: true,
+          cursorBlinking: "smooth",
+          cursorSmoothCaretAnimation: true,
+          minimap: { enabled: false },
+          scrollBeyondLastLine: false,
+          wordWrap: "on",
+          automaticLayout: true,
+          ...options,
+        }}
+      />
+    </div>
+  )
 }

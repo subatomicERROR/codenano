@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { getBrowserClient } from "@/lib/supabase"
-import { Loader2, AlertTriangle } from "lucide-react"
+import { Loader2, AlertTriangle, Share } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 interface SaveProjectModalProps {
@@ -143,65 +143,68 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
         return
       }
 
-      let projectId = projectData.id
-      let error = null
-
-      if (projectId) {
-        // Update existing project
-        const { error: updateError, data } = await supabase
-          .from("projects")
-          .update({
-            title,
-            description,
-            html: projectData.html,
-            css: projectData.css,
-            js: projectData.js,
-            is_public: isPublic,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", projectId)
-          .select()
-          .single()
-
-        error = updateError
-        if (data) projectId = data.id
-      } else {
-        // Create new project
-        const { error: insertError, data } = await supabase
-          .from("projects")
-          .insert({
-            title,
-            description,
-            html: projectData.html,
-            css: projectData.css,
-            js: projectData.js,
-            is_public: isPublic,
-            user_id: session.user.id,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .select()
-          .single()
-
-        error = insertError
-        if (data) projectId = data.id
+      // Prepare project data with proper structure
+      const projectPayload = {
+        title: title.trim(),
+        description: description.trim(),
+        html: projectData.html || "",
+        css: projectData.css || "",
+        js: projectData.js || "",
+        is_public: isPublic,
+        user_id: session.user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }
 
-      if (error) throw error
+      let response
+      let projectId = projectData.id
+
+      if (projectId && !projectId.startsWith("local-")) {
+        // Update existing project
+        response = await fetch(`/api/projects?id=${projectId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: projectId,
+            ...projectPayload,
+          }),
+        })
+      } else {
+        // Create new project
+        response = await fetch("/api/projects", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(projectPayload),
+        })
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to save project`)
+      }
+
+      const result = await response.json()
+      projectId = result.id
 
       if (!projectId) {
         throw new Error("Failed to save project: No project ID returned")
       }
 
       toast({
-        title: "Project saved",
-        description: "Your project has been saved successfully",
+        title: "Project saved successfully! 🎉",
+        description: `"${title}" has been saved to your dashboard`,
       })
 
       // Also save to localStorage for redundancy
       localStorage.setItem("code-nano-html", projectData.html)
       localStorage.setItem("code-nano-css", projectData.css)
       localStorage.setItem("code-nano-js", projectData.js)
+      localStorage.setItem("code-nano-title", title)
+      localStorage.setItem("code-nano-project-id", projectId)
 
       onSaveSuccess(projectId)
       onClose()
@@ -209,8 +212,42 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
       console.error("Save error:", error)
       setError(error.message || "Something went wrong")
       toast({
-        title: "Error",
-        description: error.message || "Something went wrong",
+        title: "Failed to save project",
+        description: error.message || "Please try again or check your connection",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const shareToExplore = async () => {
+    if (!title.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please provide a title before sharing",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      // First save the project
+      await handleSave()
+
+      // Then share to explore (make it public)
+      setIsPublic(true)
+
+      toast({
+        title: "Shared to Explore! 🌟",
+        description: "Your project is now visible in the explore page",
+      })
+    } catch (error: any) {
+      toast({
+        title: "Failed to share",
+        description: error.message || "Please try again",
         variant: "destructive",
       })
     } finally {
@@ -290,9 +327,25 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex gap-2">
           <Button variant="outline" onClick={onClose} className="border-[#333333] hover:bg-[#252525]">
             Cancel
+          </Button>
+          <Button
+            onClick={shareToExplore}
+            variant="outline"
+            className="border-[#00ff88] text-[#00ff88] hover:bg-[#00ff88] hover:text-black"
+            disabled={loading || !tablesExist}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sharing...
+              </>
+            ) : (
+              <>
+                <Share className="mr-2 h-4 w-4" /> Share to Explore
+              </>
+            )}
           </Button>
           <Button
             onClick={handleSave}
