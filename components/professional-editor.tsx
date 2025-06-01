@@ -51,6 +51,7 @@ import ConsolePanel from "./console-panel"
 import Link from "next/link"
 import CreateProjectModal from "./create-project-modal"
 import CodePenLayout from "./codepen-layout"
+import MobileEditor from "./mobile-editor"
 
 export default function ProfessionalEditor() {
   const [user, setUser] = useState<any>(null)
@@ -63,6 +64,7 @@ export default function ProfessionalEditor() {
   const [isPublic, setIsPublic] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   const router = useRouter()
   const { toast } = useToast()
@@ -113,6 +115,18 @@ export default function ProfessionalEditor() {
       authListener.subscription.unsubscribe()
     }
   }, [supabase])
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(
+        window.innerWidth < 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+      )
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -491,11 +505,21 @@ export default function ProfessionalEditor() {
               {(previewMode === "editor" || previewMode === "split") && (
                 <div className={previewMode === "split" ? "w-1/2 border-r border-[#333333]" : "w-full"}>
                   {activeFile ? (
-                    <MonacoEditor
-                      value={activeFile.content}
-                      language={activeFile.language}
-                      onChange={handleFileChange}
-                    />
+                    isMobile ? (
+                      <MobileEditor
+                        value={activeFile.content}
+                        language={activeFile.language}
+                        onChange={handleFileChange}
+                        onSave={handleSave}
+                        onRun={handleRun}
+                      />
+                    ) : (
+                      <MonacoEditor
+                        value={activeFile.content}
+                        language={activeFile.language}
+                        onChange={handleFileChange}
+                      />
+                    )
                   ) : (
                     <div className="h-full flex items-center justify-center bg-[#1a1a1a] text-gray-400">
                       <div className="text-center">

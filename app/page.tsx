@@ -7,6 +7,7 @@ import { ArrowRight, Github, Zap, GitBranch, Terminal } from "lucide-react"
 import FeaturedProjectsWrapper from "@/components/featured-projects-wrapper"
 import { getBrowserClient } from "@/lib/supabase"
 import { Logo } from "@/components/logo"
+import MobileNavbar from "@/components/mobile-navbar"
 
 export default function Home() {
   const [user, setUser] = useState<any>(null)
@@ -33,10 +34,15 @@ export default function Home() {
     }
   }, [supabase])
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e0e0e0]">
-      {/* Navbar */}
-      <nav className="flex items-center justify-between h-[60px] bg-[#1a1a1a] px-6 border-b border-[#333333]">
+      {/* Desktop Navbar */}
+      <nav className="hidden md:flex items-center justify-between h-[60px] bg-[#1a1a1a] px-6 border-b border-[#333333]">
         <div className="flex items-center gap-3">
           <Logo size="md" />
         </div>
@@ -68,6 +74,9 @@ export default function Home() {
         </div>
       </nav>
 
+      {/* Mobile Navbar */}
+      <MobileNavbar user={user} onSignOut={handleSignOut} />
+
       {/* Hero Section */}
       <section className="relative py-20 px-6 md:py-32 md:px-10 max-w-7xl mx-auto">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#0a0a0a] opacity-50"></div>
@@ -77,11 +86,11 @@ export default function Home() {
         </div>
         <div className="relative z-10 max-w-3xl">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            The <span className="text-[#00ff88]">next-generation</span> development platform
+            Code anywhere, <span className="text-[#00ff88]">anytime</span> with CodeNANO
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-[#e0e0e0]/80">
-            A sophisticated IDE that combines real-time collaboration, multi-language support, and Git-style version
-            control in a lightning-fast environment.
+            A powerful, mobile-first code playground that lets you write, test, and share HTML, CSS, JavaScript, Python,
+            and more - directly from your browser or phone.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link href={user ? "/editor" : "/auth/login"}>
@@ -102,7 +111,7 @@ export default function Home() {
       <section className="py-16 px-6 bg-[#0f0f0f]">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold mb-12 text-center">
-            Enterprise-grade <span className="text-[#00ff88]">features</span>
+            Everything you need to <span className="text-[#00ff88]">code on the go</span>
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -110,9 +119,10 @@ export default function Home() {
               <div className="w-12 h-12 bg-[#00ff88]/10 rounded-lg flex items-center justify-center mb-4">
                 <Zap className="h-6 w-6 text-[#00ff88]" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Multi-Language Support</h3>
+              <h3 className="text-xl font-bold mb-2">Mobile-First Design</h3>
               <p className="text-[#e0e0e0]/70">
-                Build with HTML/CSS/JS, Python, React, Next.js, or Markdown with real-time preview and execution.
+                Optimized for mobile browsers with touch-friendly controls, copy/paste support, and responsive layouts
+                that work perfectly on any device.
               </p>
             </div>
 
@@ -120,10 +130,10 @@ export default function Home() {
               <div className="w-12 h-12 bg-[#00ff88]/10 rounded-lg flex items-center justify-center mb-4">
                 <GitBranch className="h-6 w-6 text-[#00ff88]" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Git-Style Version Control</h3>
+              <h3 className="text-xl font-bold mb-2">Instant Preview & Sharing</h3>
               <p className="text-[#e0e0e0]/70">
-                Track changes, create branches, and restore previous versions with our integrated version control
-                system.
+                See your code come to life instantly with real-time preview. Save and share your projects with the
+                community or keep them private.
               </p>
             </div>
 
@@ -131,10 +141,10 @@ export default function Home() {
               <div className="w-12 h-12 bg-[#00ff88]/10 rounded-lg flex items-center justify-center mb-4">
                 <Terminal className="h-6 w-6 text-[#00ff88]" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Full-Stack Development</h3>
+              <h3 className="text-xl font-bold mb-2">Multiple Languages</h3>
               <p className="text-[#e0e0e0]/70">
-                Build complete applications with support for front-end, back-end, and database integration in one
-                platform.
+                Write in HTML/CSS/JS, Python, React, Next.js, or Markdown with syntax highlighting, auto-completion, and
+                built-in templates.
               </p>
             </div>
           </div>
@@ -147,11 +157,11 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-bold mb-6">
-                Streamlined <span className="text-[#00ff88]">workflow</span> for modern developers
+                Perfect for <span className="text-[#00ff88]">learning</span> and prototyping
               </h2>
               <p className="text-lg mb-8 text-[#e0e0e0]/80">
-                CodeNANO integrates seamlessly with your development process, providing tools that enhance productivity
-                and collaboration.
+                Whether you're a student learning to code, a developer prototyping ideas, or someone who wants to code
+                on the go, CodeNANO makes it simple and enjoyable.
               </p>
 
               <div className="space-y-4">
@@ -160,9 +170,10 @@ export default function Home() {
                     <span className="text-black font-bold text-sm">1</span>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-1">Multi-language development</h3>
+                    <h3 className="text-xl font-semibold mb-1">Start coding instantly</h3>
                     <p className="text-[#e0e0e0]/70">
-                      Switch between languages and frameworks seamlessly with specialized tools for each environment.
+                      No setup required. Open CodeNANO in any browser, choose a template or start from scratch, and
+                      begin coding immediately.
                     </p>
                   </div>
                 </div>
@@ -172,10 +183,10 @@ export default function Home() {
                     <span className="text-black font-bold text-sm">2</span>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-1">Automatic versioning</h3>
+                    <h3 className="text-xl font-semibold mb-1">See results in real-time</h3>
                     <p className="text-[#e0e0e0]/70">
-                      Every change is automatically saved and versioned, allowing you to track progress and revert when
-                      needed.
+                      Watch your code come to life with instant preview. Debug with the built-in console and test on
+                      different screen sizes.
                     </p>
                   </div>
                 </div>
@@ -185,9 +196,10 @@ export default function Home() {
                     <span className="text-black font-bold text-sm">3</span>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-1">Instant deployment</h3>
+                    <h3 className="text-xl font-semibold mb-1">Save and share</h3>
                     <p className="text-[#e0e0e0]/70">
-                      Deploy your projects with a single click to our global CDN for immediate sharing and testing.
+                      Save your projects to your account, share them with others, or export them to continue working
+                      locally.
                     </p>
                   </div>
                 </div>
@@ -250,13 +262,13 @@ export default function Home() {
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-blue-500 rounded-full mr-4"></div>
                 <div>
-                  <h4 className="font-bold">Sarah Chen</h4>
-                  <p className="text-sm text-[#e0e0e0]/70">Senior Developer @ TechGiant</p>
+                  <h4 className="font-bold">Alex Chen</h4>
+                  <p className="text-sm text-[#e0e0e0]/70">Computer Science Student</p>
                 </div>
               </div>
               <p className="text-[#e0e0e0]/80 italic">
-                "CodeNANO has revolutionized our development workflow. The multi-language support has increased our
-                team's productivity by 40%."
+                "CodeNANO is perfect for coding on my phone during commutes. The mobile interface is surprisingly good
+                and I can actually get work done!"
               </p>
             </div>
 
@@ -264,13 +276,13 @@ export default function Home() {
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-purple-500 rounded-full mr-4"></div>
                 <div>
-                  <h4 className="font-bold">Marcus Johnson</h4>
-                  <p className="text-sm text-[#e0e0e0]/70">CTO @ StartupX</p>
+                  <h4 className="font-bold">Maria Rodriguez</h4>
+                  <p className="text-sm text-[#e0e0e0]/70">Frontend Developer</p>
                 </div>
               </div>
               <p className="text-[#e0e0e0]/80 italic">
-                "The version control system in CodeNANO is unlike anything I've used before. It's intuitive, powerful,
-                and integrates perfectly with our existing tools."
+                "Great for quick prototypes and testing ideas. The instant preview and sharing features make it easy to
+                collaborate with my team."
               </p>
             </div>
 
@@ -278,13 +290,13 @@ export default function Home() {
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-green-500 rounded-full mr-4"></div>
                 <div>
-                  <h4 className="font-bold">Aisha Patel</h4>
-                  <p className="text-sm text-[#e0e0e0]/70">Lead Engineer @ DevCorp</p>
+                  <h4 className="font-bold">David Kim</h4>
+                  <p className="text-sm text-[#e0e0e0]/70">Coding Bootcamp Instructor</p>
                 </div>
               </div>
               <p className="text-[#e0e0e0]/80 italic">
-                "We've cut our development time in half since switching to CodeNANO. The real-time collaboration
-                features are game-changing for our distributed team."
+                "I recommend CodeNANO to all my students. It's accessible, easy to use, and works great for learning web
+                development fundamentals."
               </p>
             </div>
           </div>
@@ -294,9 +306,10 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-16 px-6 bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to transform your development workflow?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to start coding anywhere?</h2>
           <p className="text-xl mb-8 text-[#e0e0e0]/80">
-            Join thousands of developers who are building the future with CodeNANO's advanced development platform.
+            Join thousands of developers, students, and creators who use CodeNANO to bring their ideas to life. No
+            downloads, no setup - just pure coding fun.
           </p>
           <Link href={user ? "/editor" : "/auth/login"}>
             <Button size="lg" className="bg-[#00ff88] text-black hover:bg-[#00cc77]">

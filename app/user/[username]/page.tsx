@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Code, Clock, Star, Github, Twitter, Globe, Loader2, BadgeCheck, AlertTriangle } from "lucide-react"
+import { Code, Clock, Star, Github, Twitter, Globe, BadgeCheck, AlertTriangle } from "lucide-react"
 import DashboardNavbar from "@/components/dashboard-navbar"
 import { getBrowserClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { EnhancedLogoLoading } from "@/components/logo-loading"
 
 export default function UserProfile({ params }: { params: { username: string } }) {
   const username = params.username
@@ -287,7 +288,7 @@ export default function UserProfile({ params }: { params: { username: string } }
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-[#e0e0e0] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#00ff88]" />
+        <EnhancedLogoLoading size="xl" text="Loading profile..." />
       </div>
     )
   }
@@ -310,7 +311,7 @@ export default function UserProfile({ params }: { params: { username: string } }
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Initializing...
+                    <EnhancedLogoLoading size="sm" className="mr-2" /> Initializing...
                   </>
                 ) : (
                   "Initialize Database"

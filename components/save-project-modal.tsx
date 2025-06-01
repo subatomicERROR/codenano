@@ -16,8 +16,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { getBrowserClient } from "@/lib/supabase"
-import { Loader2, AlertTriangle, Share } from "lucide-react"
+import { AlertTriangle, Share } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { EnhancedLogoLoading } from "@/components/logo-loading"
 
 interface SaveProjectModalProps {
   isOpen: boolean
@@ -276,7 +277,8 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Initializing...
+                    <EnhancedLogoLoading size="sm" className="mr-2" />
+                    Initializing...
                   </>
                 ) : (
                   "Initialize Database"
@@ -339,7 +341,7 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
           >
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sharing...
+                <EnhancedLogoLoading size="sm" className="mr-2" /> Sharing...
               </>
             ) : (
               <>
@@ -354,7 +356,7 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
           >
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                <EnhancedLogoLoading size="sm" className="mr-2" /> Saving...
               </>
             ) : (
               "Save Project"

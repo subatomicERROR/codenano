@@ -35,7 +35,6 @@ import {
   Code,
   Eye,
   Monitor,
-  Loader2,
   Home,
   Compass,
   Zap,
@@ -51,11 +50,13 @@ import {
   ExternalLink,
 } from "lucide-react"
 import { Logo } from "./logo"
+import { EnhancedLogoLoading } from "./logo-loading"
 import MonacoEditor from "./monaco-editor"
 import Link from "next/link"
 
 export default function CleanEditor() {
   const [user, setUser] = useState<any>(null)
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
   const [projectTitle, setProjectTitle] = useState("My Project")
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [tempTitle, setTempTitle] = useState(projectTitle)
@@ -118,30 +119,66 @@ export default function CleanEditor() {
     }
   }, [jsFile, jsContent])
 
-  // Check authentication with better error handling
+  // Enhanced authentication check with better error handling
   useEffect(() => {
     const checkUser = async () => {
       try {
+        setIsAuthLoading(true)
         const {
           data: { session },
+          error,
         } = await supabase.auth.getSession()
-        setUser(session?.user || null)
+
+        if (error) {
+          console.error("Auth session error:", error)
+          setUser(null)
+        } else {
+          setUser(session?.user || null)
+          console.log("Auth check - User:", session?.user ? "Authenticated" : "Not authenticated")
+        }
       } catch (error) {
         console.error("Auth check failed:", error)
+        setUser(null)
+      } finally {
+        setIsAuthLoading(false)
       }
     }
+
     checkUser()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user ? "User present" : "No user")
       setUser(session?.user || null)
+      setIsAuthLoading(false)
+
+      if (event === "SIGNED_IN") {
+        toast({
+          title: "✅ Signed in successfully!",
+          description: "You can now save and share your projects",
+          duration: 3000,
+        })
+      } else if (event === "SIGNED_OUT") {
+        toast({
+          title: "👋 Signed out",
+          description: "Your work is saved locally",
+          duration: 2000,
+        })
+      }
     })
 
     return () => authListener.subscription.unsubscribe()
-  }, [supabase])
+  }, [supabase, toast])
 
-  // Enhanced auto-save functionality
+  // Enhanced auto-save functionality with better auth checking
   const triggerAutoSave = useCallback(async () => {
-    if (!user || !hasUnsavedChanges || !currentProject) return
+    if (!user || !hasUnsavedChanges || !currentProject) {
+      console.log("Auto-save skipped:", {
+        hasUser: !!user,
+        hasChanges: hasUnsavedChanges,
+        hasProject: !!currentProject,
+      })
+      return
+    }
 
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current)
@@ -150,14 +187,22 @@ export default function CleanEditor() {
     autoSaveTimeoutRef.current = setTimeout(async () => {
       setIsAutoSaving(true)
       try {
-        // Fix: Use correct field names that match the API
+        // Double-check auth before saving
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        if (!session) {
+          console.log("Auto-save failed: No active session")
+          throw new Error("No active session")
+        }
+
         const projectData = {
           id: currentProjectId,
           title: projectTitle || "Untitled Project",
           description: saveDescription || "Auto-saved project",
-          html: htmlContent, // Changed from html_content
-          css: cssContent, // Changed from css_content
-          js: jsContent, // Changed from js_content
+          html: htmlContent,
+          css: cssContent,
+          js: jsContent,
           is_public: false, // Auto-saves are private by default
           tags: saveTags
             .split(",")
@@ -174,7 +219,10 @@ export default function CleanEditor() {
 
         const response = await fetch("/api/projects", {
           method: currentProjectId ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
           body: JSON.stringify(projectData),
         })
 
@@ -213,7 +261,6 @@ export default function CleanEditor() {
           localStorage.setItem("codenano-title", projectTitle)
           localStorage.setItem("codenano-backup-timestamp", new Date().toISOString())
 
-          // Show a less intrusive error message for auto-save failures
           console.warn("Auto-save failed, saved to localStorage as backup")
         } catch (storageError) {
           console.error("Failed to save to localStorage:", storageError)
@@ -221,7 +268,7 @@ export default function CleanEditor() {
       } finally {
         setIsAutoSaving(false)
       }
-    }, 3000) // Auto-save after 3 seconds of inactivity
+    }, 3000)
   }, [
     user,
     hasUnsavedChanges,
@@ -234,6 +281,7 @@ export default function CleanEditor() {
     jsContent,
     saveTags,
     setSaveState,
+    supabase,
   ])
 
   // Enhanced content change handlers with auto-save
@@ -435,40 +483,102 @@ export default function CleanEditor() {
     return () => clearTimeout(timeoutId)
   }, [htmlContent, cssContent, jsContent, handleRun])
 
-  // Enhanced save functionality
+  // Enhanced save functionality with better auth checking
   const handleSave = useCallback(async () => {
+    console.log("Save button clicked - User state:", !!user, "Auth loading:", isAuthLoading)
+
+    if (isAuthLoading) {
+      toast({
+        title: "⏳ Please wait",
+        description: "Checking authentication status...",
+        duration: 2000,
+      })
+      return
+    }
+
     if (!user) {
       toast({
         title: "🔐 Sign in required",
         description: "Please sign in to save your project",
         variant: "destructive",
+        action: (
+          <Button variant="outline" size="sm" onClick={() => router.push("/auth/login")}>
+            Sign In
+          </Button>
+        ),
       })
       return
     }
-    setShowSaveDialog(true)
-  }, [user, toast])
 
-  // Quick share to explore
+    // Double-check auth before opening save dialog
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) {
+        toast({
+          title: "🔐 Session expired",
+          description: "Please sign in again to save your project",
+          variant: "destructive",
+        })
+        setUser(null)
+        return
+      }
+    } catch (error) {
+      console.error("Auth check failed:", error)
+      toast({
+        title: "❌ Authentication error",
+        description: "Please try signing in again",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setShowSaveDialog(true)
+  }, [user, isAuthLoading, toast, router, supabase])
+
+  // Quick share to explore with enhanced auth checking
   const handleQuickShare = useCallback(async () => {
+    if (isAuthLoading) {
+      toast({
+        title: "⏳ Please wait",
+        description: "Checking authentication status...",
+        duration: 2000,
+      })
+      return
+    }
+
     if (!user) {
       toast({
         title: "🔐 Sign in required",
         description: "Please sign in to share your project",
         variant: "destructive",
+        action: (
+          <Button variant="outline" size="sm" onClick={() => router.push("/auth/login")}>
+            Sign In
+          </Button>
+        ),
       })
       return
     }
 
     setIsSharing(true)
     try {
-      // Fix: Use correct field names that match the API
+      // Double-check auth before sharing
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error("No active session")
+      }
+
       const projectData = {
         id: currentProjectId,
         title: projectTitle || "Shared Project",
         description: "Shared from CodeNANO Editor",
-        html: htmlContent, // Changed from html_content
-        css: cssContent, // Changed from css_content
-        js: jsContent, // Changed from js_content
+        html: htmlContent,
+        css: cssContent,
+        js: jsContent,
         is_public: true, // Make it public for explore
         tags: ["html", "css", "javascript", "shared"],
       }
@@ -482,7 +592,10 @@ export default function CleanEditor() {
 
       const response = await fetch("/api/projects", {
         method: currentProjectId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify(projectData),
       })
 
@@ -526,7 +639,7 @@ export default function CleanEditor() {
     } finally {
       setIsSharing(false)
     }
-  }, [user, currentProjectId, projectTitle, htmlContent, cssContent, jsContent, toast])
+  }, [user, isAuthLoading, currentProjectId, projectTitle, htmlContent, cssContent, jsContent, toast, router, supabase])
 
   // Copy project URL
   const handleCopyUrl = useCallback(async () => {
@@ -549,7 +662,7 @@ export default function CleanEditor() {
     }
   }, [currentProjectId, toast])
 
-  // Enhanced save project with better UX
+  // Enhanced save project with better UX and auth checking
   const handleSaveProject = useCallback(async () => {
     if (!currentProject || !user) return
 
@@ -557,14 +670,21 @@ export default function CleanEditor() {
     setSaveState("saving")
 
     try {
-      // Fix: Use correct field names that match the API
+      // Triple-check auth before saving
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error("No active session - please sign in again")
+      }
+
       const projectData = {
         id: currentProjectId,
         title: projectTitle,
         description: saveDescription,
-        html: htmlContent, // Changed from html_content
-        css: cssContent, // Changed from css_content
-        js: jsContent, // Changed from js_content
+        html: htmlContent,
+        css: cssContent,
+        js: jsContent,
         is_public: isPublic,
         tags: saveTags
           .split(",")
@@ -581,7 +701,10 @@ export default function CleanEditor() {
 
       const response = await fetch("/api/projects", {
         method: currentProjectId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify(projectData),
       })
 
@@ -642,6 +765,7 @@ export default function CleanEditor() {
     toast,
     setSaveState,
     router,
+    supabase,
   ])
 
   // Enhanced export with better formatting
@@ -751,16 +875,7 @@ export default function CleanEditor() {
   if (!currentProject) {
     return (
       <div className="h-screen bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a] flex items-center justify-center">
-        <div className="text-center text-white animate-pulse">
-          <div className="text-6xl mb-4 animate-bounce">🚀</div>
-          <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-[#00ff88] to-[#00ccff] bg-clip-text text-transparent">
-            CodeNANO
-          </h2>
-          <p className="text-gray-400 animate-fade-in">Loading your workspace...</p>
-          <div className="mt-4 flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#00ff88]"></div>
-          </div>
-        </div>
+        <EnhancedLogoLoading size="xl" text="Loading your workspace..." />
       </div>
     )
   }
@@ -812,7 +927,7 @@ export default function CleanEditor() {
           <div className="flex items-center gap-2">
             {isAutoSaving && (
               <div className="flex items-center gap-2 text-[#00ff88] animate-pulse">
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <EnhancedLogoLoading size="sm" />
                 <span className="text-sm">Auto-saving...</span>
               </div>
             )}
@@ -828,6 +943,14 @@ export default function CleanEditor() {
               <div className="flex items-center gap-2 text-green-400">
                 <Check className="w-4 h-4" />
                 <span className="text-sm">Saved {lastSaved.toLocaleTimeString()}</span>
+              </div>
+            )}
+
+            {/* Auth status indicator */}
+            {isAuthLoading && (
+              <div className="flex items-center gap-2 text-blue-400">
+                <EnhancedLogoLoading size="sm" />
+                <span className="text-sm">Checking auth...</span>
               </div>
             )}
           </div>
@@ -882,7 +1005,7 @@ export default function CleanEditor() {
             disabled={isPreviewLoading}
             className="border-[#333333]/50 hover:bg-[#252525] text-[#e0e0e0] hover:border-[#00ff88] transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
           >
-            {isPreviewLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+            {isPreviewLoading ? <EnhancedLogoLoading size="sm" className="mr-2" /> : <Play className="mr-2 h-4 w-4" />}
             Run
           </Button>
 
@@ -890,10 +1013,10 @@ export default function CleanEditor() {
             variant="outline"
             size="sm"
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || isAuthLoading}
             className="border-[#333333]/50 hover:bg-[#252525] text-[#e0e0e0] hover:border-[#00ff88] transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
           >
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {isSaving ? <EnhancedLogoLoading size="sm" className="mr-2" /> : <Save className="mr-2 h-4 w-4" />}
             Save
           </Button>
 
@@ -901,10 +1024,10 @@ export default function CleanEditor() {
             variant="outline"
             size="sm"
             onClick={handleQuickShare}
-            disabled={isSharing}
+            disabled={isSharing || isAuthLoading}
             className="border-[#00ff88]/50 text-[#00ff88] hover:bg-[#00ff88] hover:text-black transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
           >
-            {isSharing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}
+            {isSharing ? <EnhancedLogoLoading size="sm" className="mr-2" /> : <Share2 className="mr-2 h-4 w-4" />}
             Share to Explore
           </Button>
 
@@ -1148,7 +1271,7 @@ export default function CleanEditor() {
                   className="text-gray-600 hover:text-gray-900 hover:bg-gray-200/50 transition-all duration-300"
                 >
                   {isPreviewLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <EnhancedLogoLoading size="sm" className="mr-2" />
                   ) : (
                     <Play className="w-4 h-4 mr-2" />
                   )}
@@ -1159,10 +1282,7 @@ export default function CleanEditor() {
               {/* Loading overlay */}
               {isPreviewLoading && (
                 <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10 transition-all duration-300">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00ff88] mx-auto mb-4"></div>
-                    <p className="text-gray-600 font-medium">Compiling your masterpiece...</p>
-                  </div>
+                  <EnhancedLogoLoading size="xl" text="Compiling your masterpiece..." />
                 </div>
               )}
 
@@ -1274,7 +1394,7 @@ export default function CleanEditor() {
             >
               {isSaving ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <EnhancedLogoLoading size="sm" className="mr-2" />
                   Saving...
                 </>
               ) : (

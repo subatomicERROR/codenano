@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { getBrowserClient } from "@/lib/supabase"
 import { Github } from "lucide-react"
 import { Logo } from "@/components/logo"
+import { EnhancedLogoLoading } from "@/components/logo-loading"
 
 export default function AuthForm() {
   const [email, setEmail] = useState("")
@@ -157,7 +158,14 @@ export default function AuthForm() {
               </div>
 
               <Button type="submit" className="w-full bg-[#00ff88] text-black hover:bg-[#00cc77]" disabled={loading}>
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <EnhancedLogoLoading size="sm" className="mr-2" />
+                    Signing in...
+                  </div>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
           </TabsContent>
@@ -191,7 +199,14 @@ export default function AuthForm() {
               </div>
 
               <Button type="submit" className="w-full bg-[#00ff88] text-black hover:bg-[#00cc77]" disabled={loading}>
-                {loading ? "Creating account..." : "Create Account"}
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <EnhancedLogoLoading size="sm" className="mr-2" />
+                    Creating account...
+                  </div>
+                ) : (
+                  "Create Account"
+                )}
               </Button>
             </form>
           </TabsContent>
@@ -213,8 +228,17 @@ export default function AuthForm() {
           onClick={handleGithubSignIn}
           disabled={loading}
         >
-          <Github className="mr-2 h-4 w-4" />
-          GitHub
+          {loading ? (
+            <div className="flex items-center justify-center">
+              <EnhancedLogoLoading size="sm" className="mr-2" />
+              Loading...
+            </div>
+          ) : (
+            <>
+              <Github className="mr-2 h-4 w-4" />
+              GitHub
+            </>
+          )}
         </Button>
       </div>
     </div>

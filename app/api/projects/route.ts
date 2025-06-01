@@ -78,6 +78,7 @@ export async function POST(request: Request) {
       css: body.css?.length || 0,
       js: body.js?.length || 0,
       is_public: body.is_public,
+      thumbnail: body.thumbnail ? "Present" : "None",
       user_id: session.user.id,
     })
 
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
       html: body.html && typeof body.html === "string" ? body.html : "",
       css: body.css && typeof body.css === "string" ? body.css : "",
       js: body.js && typeof body.js === "string" ? body.js : "",
+      thumbnail: body.thumbnail && typeof body.thumbnail === "string" ? body.thumbnail : null,
       is_public: Boolean(body.is_public),
       user_id: session.user.id,
       created_at: new Date().toISOString(),
@@ -117,6 +119,7 @@ export async function POST(request: Request) {
       html: projectData.html.length,
       css: projectData.css.length,
       js: projectData.js.length,
+      thumbnail: projectData.thumbnail ? "Present" : "None",
       is_public: projectData.is_public,
       user_id: projectData.user_id,
     })
@@ -219,6 +222,7 @@ export async function PUT(request: Request) {
       html: updateData.html?.length,
       css: updateData.css?.length,
       js: updateData.js?.length,
+      thumbnail: updateData.thumbnail ? "Present" : "None",
     })
 
     // First check if the project exists and belongs to the user
@@ -247,6 +251,7 @@ export async function PUT(request: Request) {
       html: updateData.html || "",
       css: updateData.css || "",
       js: updateData.js || "",
+      thumbnail: updateData.thumbnail || null,
       is_public: Boolean(updateData.is_public),
       updated_at: new Date().toISOString(),
     }
