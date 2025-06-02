@@ -37,7 +37,7 @@
 ## 🚀 Quick Start
 
 ### Try Online
-Visit [CodeNANO](https://your-domain.com) and start coding immediately - no installation required!
+Visit [CodeNANO](https://codenano.vercel.app/) and start coding immediately - no installation required!
 
 ### Local Development
 
@@ -202,11 +202,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  <p>Built with ❤️ by the CodeNANO team</p>
+  <p>Built with ❤️ by the subatomicERROR</p>
   <p>
     <a href="https://codenano.dev">Website</a> •
     <a href="https://docs.codenano.dev">Documentation</a> •
-    <a href="https://github.com/your-username/code-nano/issues">Report Bug</a> •
-    <a href="https://github.com/your-username/code-nano/issues">Request Feature</a>
+    <a href="https://github.com/subatomicERROR/codenano/issues">Report Bug</a> •
+    <a href="https://github.com/subatomicERROR/codenano/issues">Request Feature</a>
   </p>
 </div>
