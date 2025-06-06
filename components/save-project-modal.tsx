@@ -16,29 +16,32 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { getBrowserClient } from "@/lib/supabase"
-import { AlertTriangle, Share } from "lucide-react"
+import { AlertTriangle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { EnhancedLogoLoading } from "@/components/logo-loading"
+import { ProfessionalLoading } from "@/components/professional-loading"
+import { useEditorStore } from "@/lib/editor-store"
 
 interface SaveProjectModalProps {
   isOpen: boolean
   onClose: () => void
-  projectData: {
-    id?: string
-    title: string
-    description: string
-    html: string
-    css: string
-    js: string
-    is_public: boolean
-  }
-  onSaveSuccess: (projectId: string) => void
+  user?: any
+  projectData?: any
+  onSaveSuccess?: (projectId: string) => void
 }
 
-export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveSuccess }: SaveProjectModalProps) {
-  const [title, setTitle] = useState(projectData.title || "")
-  const [description, setDescription] = useState(projectData.description || "")
-  const [isPublic, setIsPublic] = useState(projectData.is_public || false)
+export function SaveProjectModal({
+  isOpen,
+  onClose,
+  user,
+  projectData: externalProjectData,
+  onSaveSuccess,
+}: SaveProjectModalProps) {
+  const { currentProject } = useEditorStore()
+  const projectData = externalProjectData || currentProject || { files: [] }
+
+  const [title, setTitle] = useState(projectData?.name || "")
+  const [description, setDescription] = useState(projectData?.description || "")
+  const [isPublic, setIsPublic] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tablesExist, setTablesExist] = useState(true)
@@ -48,9 +51,9 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
   // Update state when projectData changes
   useEffect(() => {
     if (isOpen) {
-      setTitle(projectData.title || "")
-      setDescription(projectData.description || "")
-      setIsPublic(projectData.is_public || false)
+      setTitle(projectData?.name || "")
+      setDescription(projectData?.description || "")
+      setIsPublic(true)
       checkTables()
     }
   }, [isOpen, projectData])
@@ -130,11 +133,7 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
 
     try {
       // Check if user is authenticated
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (!session) {
+      if (!user) {
         toast({
           title: "Authentication required",
           description: "Please sign in to save your project",
@@ -144,15 +143,33 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
         return
       }
 
+      // Extract content from files
+      let html = "",
+        css = "",
+        js = ""
+
+      if (projectData.files && Array.isArray(projectData.files)) {
+        projectData.files.forEach((file: any) => {
+          if (file.language === "html") html = file.content
+          if (file.language === "css") css = file.content
+          if (file.language === "javascript") js = file.content
+        })
+      } else {
+        // Fallback for old format
+        html = projectData.html || ""
+        css = projectData.css || ""
+        js = projectData.js || ""
+      }
+
       // Prepare project data with proper structure
       const projectPayload = {
         title: title.trim(),
         description: description.trim(),
-        html: projectData.html || "",
-        css: projectData.css || "",
-        js: projectData.js || "",
+        html,
+        css,
+        js,
         is_public: isPublic,
-        user_id: session.user.id,
+        user_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
@@ -200,14 +217,10 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
         description: `"${title}" has been saved to your dashboard`,
       })
 
-      // Also save to localStorage for redundancy
-      localStorage.setItem("code-nano-html", projectData.html)
-      localStorage.setItem("code-nano-css", projectData.css)
-      localStorage.setItem("code-nano-js", projectData.js)
-      localStorage.setItem("code-nano-title", title)
-      localStorage.setItem("code-nano-project-id", projectId)
+      if (onSaveSuccess) {
+        onSaveSuccess(projectId)
+      }
 
-      onSaveSuccess(projectId)
       onClose()
     } catch (error: any) {
       console.error("Save error:", error)
@@ -215,40 +228,6 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
       toast({
         title: "Failed to save project",
         description: error.message || "Please try again or check your connection",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const shareToExplore = async () => {
-    if (!title.trim()) {
-      toast({
-        title: "Title required",
-        description: "Please provide a title before sharing",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      // First save the project
-      await handleSave()
-
-      // Then share to explore (make it public)
-      setIsPublic(true)
-
-      toast({
-        title: "Shared to Explore! 🌟",
-        description: "Your project is now visible in the explore page",
-      })
-    } catch (error: any) {
-      toast({
-        title: "Failed to share",
-        description: error.message || "Please try again",
         variant: "destructive",
       })
     } finally {
@@ -277,7 +256,7 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
               >
                 {loading ? (
                   <>
-                    <EnhancedLogoLoading size="sm" className="mr-2" />
+                    <ProfessionalLoading size="sm" className="mr-2" />
                     Initializing...
                   </>
                 ) : (
@@ -334,29 +313,13 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
             Cancel
           </Button>
           <Button
-            onClick={shareToExplore}
-            variant="outline"
-            className="border-[#00ff88] text-[#00ff88] hover:bg-[#00ff88] hover:text-black"
-            disabled={loading || !tablesExist}
-          >
-            {loading ? (
-              <>
-                <EnhancedLogoLoading size="sm" className="mr-2" /> Sharing...
-              </>
-            ) : (
-              <>
-                <Share className="mr-2 h-4 w-4" /> Share to Explore
-              </>
-            )}
-          </Button>
-          <Button
             onClick={handleSave}
             className="bg-[#00ff88] text-black hover:bg-[#00cc77]"
             disabled={loading || !tablesExist}
           >
             {loading ? (
               <>
-                <EnhancedLogoLoading size="sm" className="mr-2" /> Saving...
+                <ProfessionalLoading size="sm" className="mr-2" /> Saving...
               </>
             ) : (
               "Save Project"
@@ -367,3 +330,6 @@ export default function SaveProjectModal({ isOpen, onClose, projectData, onSaveS
     </Dialog>
   )
 }
+
+// Default export for backward compatibility
+export default SaveProjectModal

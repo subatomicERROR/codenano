@@ -1,115 +1,120 @@
 "use client"
 
-import { useEditorStore } from "@/lib/editor-store"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Save, Download, Github, Play, Sidebar, Terminal, Monitor, Code, Eye } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Play, Save, Share2, Settings, Plus } from "lucide-react"
+import { useEditorStore } from "@/lib/editor-store"
+import { SaveProjectModal } from "@/components/save-project-modal"
+import { ShareProject } from "@/components/share-project"
 
 interface TopMenuBarProps {
-  onSave: () => void
+  user?: any
+  onRun?: () => void
+  onSave?: () => void
+  onShare?: () => void
+  onSettings?: () => void
 }
 
-export default function TopMenuBar({ onSave }: TopMenuBarProps) {
-  const { saveState, sidebarOpen, setSidebarOpen, consoleOpen, setConsoleOpen, previewMode, setPreviewMode } =
-    useEditorStore()
+export function TopMenuBar({ user, onRun, onSave, onShare, onSettings }: TopMenuBarProps) {
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const { currentProject, createProject } = useEditorStore()
+
+  const handleSave = () => {
+    if (user) {
+      setShowSaveModal(true)
+    } else {
+      // Redirect to login or show login modal
+      window.location.href = "/auth/login"
+    }
+  }
+
+  const handleShare = () => {
+    setShowShareModal(true)
+  }
+
+  const handleNewProject = () => {
+    createProject()
+  }
 
   return (
-    <div className="h-12 bg-[#1a1a1a] border-b border-[#333333] flex items-center justify-between px-4">
-      {/* Left Section */}
-      <div className="flex items-center space-x-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="text-gray-400 hover:text-white"
-        >
-          <Sidebar className="w-4 h-4" />
-        </Button>
+    <>
+      <div className="h-12 bg-[#1a1a1a] border-b border-gray-800 flex items-center justify-between px-4">
+        {/* Left side - Project actions */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleNewProject}
+            className="text-gray-300 hover:text-white hover:bg-gray-700"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            New
+          </Button>
 
-        <div className="h-4 w-px bg-[#333333]" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSave}
+            className="text-gray-300 hover:text-white hover:bg-gray-700"
+          >
+            <Save className="w-4 h-4 mr-1" />
+            Save
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onSave}
-          disabled={saveState === "saving"}
-          className="text-gray-400 hover:text-white"
-        >
-          <Save className="w-4 h-4 mr-2" />
-          {saveState === "saving" ? "Saving..." : "Save"}
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleShare}
+            className="text-gray-300 hover:text-white hover:bg-gray-700"
+          >
+            <Share2 className="w-4 h-4 mr-1" />
+            Share
+          </Button>
+        </div>
 
-        <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-          <Download className="w-4 h-4 mr-2" />
-          Export
-        </Button>
-
-        <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-          <Github className="w-4 h-4 mr-2" />
-          GitHub
-        </Button>
-      </div>
-
-      {/* Center Section */}
-      <div className="flex items-center space-x-1 bg-[#2a2a2a] rounded-md p-1">
-        <Button
-          variant={previewMode === "editor" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setPreviewMode("editor")}
-          className={previewMode === "editor" ? "bg-[#00ff88] text-black" : "text-gray-400 hover:text-white"}
-        >
-          <Code className="w-4 h-4" />
-        </Button>
-        <Button
-          variant={previewMode === "split" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setPreviewMode("split")}
-          className={previewMode === "split" ? "bg-[#00ff88] text-black" : "text-gray-400 hover:text-white"}
-        >
-          <Monitor className="w-4 h-4" />
-        </Button>
-        <Button
-          variant={previewMode === "preview" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setPreviewMode("preview")}
-          className={previewMode === "preview" ? "bg-[#00ff88] text-black" : "text-gray-400 hover:text-white"}
-        >
-          <Eye className="w-4 h-4" />
-        </Button>
-      </div>
-
-      {/* Right Section */}
-      <div className="flex items-center space-x-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setConsoleOpen(!consoleOpen)}
-          className={`${consoleOpen ? "text-[#00ff88]" : "text-gray-400"} hover:text-white`}
-        >
-          <Terminal className="w-4 h-4" />
-        </Button>
-
-        <div className="h-4 w-px bg-[#333333]" />
-
-        <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-          <Play className="w-4 h-4 mr-2" />
-          Run
-        </Button>
-
-        <div className="flex items-center space-x-2 text-xs">
-          <div
-            className={`w-2 h-2 rounded-full ${
-              saveState === "saved"
-                ? "bg-green-400"
-                : saveState === "saving"
-                  ? "bg-yellow-400"
-                  : saveState === "unsaved"
-                    ? "bg-orange-400"
-                    : "bg-red-400"
-            }`}
+        {/* Center - Project name */}
+        <div className="flex-1 max-w-md mx-4">
+          <Input
+            value={currentProject?.name || "Untitled Project"}
+            className="bg-gray-800 border-gray-700 text-white text-center"
+            readOnly
           />
-          <span className="text-gray-400 capitalize">{saveState}</span>
+        </div>
+
+        {/* Right side - Run and settings */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRun}
+            className="text-green-400 hover:text-green-300 hover:bg-gray-700"
+          >
+            <Play className="w-4 h-4 mr-1" />
+            Run
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSettings}
+            className="text-gray-300 hover:text-white hover:bg-gray-700"
+          >
+            <Settings className="w-4 h-4" />
+          </Button>
         </div>
       </div>
-    </div>
+
+      {/* Modals */}
+      {showSaveModal && <SaveProjectModal isOpen={showSaveModal} onClose={() => setShowSaveModal(false)} user={user} />}
+
+      {showShareModal && (
+        <ShareProject isOpen={showShareModal} onClose={() => setShowShareModal(false)} project={currentProject} />
+      )}
+    </>
   )
 }
+
+// Default export for backward compatibility
+export default TopMenuBar

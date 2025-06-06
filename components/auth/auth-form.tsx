@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast"
 import { getBrowserClient } from "@/lib/supabase"
 import { Github } from "lucide-react"
 import { Logo } from "@/components/logo"
-import { EnhancedLogoLoading } from "@/components/logo-loading"
 
 export default function AuthForm() {
   const [email, setEmail] = useState("")
@@ -158,14 +157,7 @@ export default function AuthForm() {
               </div>
 
               <Button type="submit" className="w-full bg-[#00ff88] text-black hover:bg-[#00cc77]" disabled={loading}>
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <EnhancedLogoLoading size="sm" className="mr-2" />
-                    Signing in...
-                  </div>
-                ) : (
-                  "Sign In"
-                )}
+                {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </TabsContent>
@@ -199,14 +191,7 @@ export default function AuthForm() {
               </div>
 
               <Button type="submit" className="w-full bg-[#00ff88] text-black hover:bg-[#00cc77]" disabled={loading}>
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <EnhancedLogoLoading size="sm" className="mr-2" />
-                    Creating account...
-                  </div>
-                ) : (
-                  "Create Account"
-                )}
+                {loading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
           </TabsContent>
@@ -229,10 +214,7 @@ export default function AuthForm() {
           disabled={loading}
         >
           {loading ? (
-            <div className="flex items-center justify-center">
-              <EnhancedLogoLoading size="sm" className="mr-2" />
-              Loading...
-            </div>
+            "Loading..."
           ) : (
             <>
               <Github className="mr-2 h-4 w-4" />

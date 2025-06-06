@@ -1,12 +1,12 @@
 {
-  "name": "CodeNANO - Code Playground",
+  "name": "CodeNANO",
   "short_name": "CodeNANO",
-  "description": "Mobile-first code playground for web development",
+  "description": "Professional web-based IDE for modern development",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#00ff88",
-  "orientation": "any",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -22,18 +22,34 @@
     }
   ],
   "categories": ["developer", "productivity", "utilities"],
-  "screenshots": [
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": false,
+  "shortcuts": [
     {
-      "src": "/screenshot-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow"
+      "name": "New Project",
+      "short_name": "New",
+      "description": "Create a new project",
+      "url": "/editor",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
-      "src": "/screenshot-desktop.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide"
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your projects",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

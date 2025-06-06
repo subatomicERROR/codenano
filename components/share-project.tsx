@@ -13,38 +13,25 @@ import { Share2, Copy, Twitter, Facebook, Linkedin, Globe, Lock } from "lucide-r
 interface ShareProjectProps {
   isOpen: boolean
   onClose: () => void
-  projectId: string
-  projectTitle: string
-  isPublic: boolean
-  onVisibilityChange: (isPublic: boolean) => void
+  project?: any
 }
 
-export default function ShareProject({
-  isOpen,
-  onClose,
-  projectId,
-  projectTitle,
-  isPublic,
-  onVisibilityChange,
-}: ShareProjectProps) {
+export function ShareProject({ isOpen, onClose, project }: ShareProjectProps) {
   const [shareUrl, setShareUrl] = useState("")
   const [embedCode, setEmbedCode] = useState("")
   const [isUpdating, setIsUpdating] = useState(false)
-  const [publicToggle, setPublicToggle] = useState(isPublic)
+  const [publicToggle, setPublicToggle] = useState(false)
   const { toast } = useToast()
   const supabase = getBrowserClient()
 
   useEffect(() => {
-    if (projectId) {
+    if (project?.id) {
       const baseUrl = window.location.origin
-      setShareUrl(`${baseUrl}/project/${projectId}`)
-      setEmbedCode(`<iframe src="${baseUrl}/embed/${projectId}" width="100%" height="500" frameborder="0"></iframe>`)
+      setShareUrl(`${baseUrl}/project/${project.id}`)
+      setEmbedCode(`<iframe src="${baseUrl}/embed/${project.id}" width="100%" height="500" frameborder="0"></iframe>`)
+      setPublicToggle(project.is_public || false)
     }
-  }, [projectId])
-
-  useEffect(() => {
-    setPublicToggle(isPublic)
-  }, [isPublic])
+  }, [project])
 
   const handleCopy = (text: string, type: string) => {
     navigator.clipboard.writeText(text)
@@ -55,7 +42,7 @@ export default function ShareProject({
   }
 
   const handleVisibilityChange = async () => {
-    if (!projectId) return
+    if (!project?.id) return
 
     setIsUpdating(true)
     try {
@@ -77,13 +64,12 @@ export default function ShareProject({
       const { error } = await supabase
         .from("projects")
         .update({ is_public: newVisibility })
-        .eq("id", projectId)
+        .eq("id", project.id)
         .eq("user_id", session.user.id)
 
       if (error) throw error
 
       setPublicToggle(newVisibility)
-      onVisibilityChange(newVisibility)
       toast({
         title: "Visibility updated",
         description: `Project is now ${newVisibility ? "public" : "private"}`,
@@ -101,7 +87,7 @@ export default function ShareProject({
   }
 
   const shareOnTwitter = () => {
-    const text = `Check out my project "${projectTitle}" on CodeNANO!`
+    const text = `Check out my project "${project?.name || "Untitled"}" on CodeNANO!`
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`
     window.open(url, "_blank")
   }
@@ -112,8 +98,8 @@ export default function ShareProject({
   }
 
   const shareOnLinkedIn = () => {
-    const title = encodeURIComponent(projectTitle)
-    const summary = encodeURIComponent(`Check out my project "${projectTitle}" on CodeNANO!`)
+    const title = encodeURIComponent(project?.name || "Untitled")
+    const summary = encodeURIComponent(`Check out my project "${project?.name || "Untitled"}" on CodeNANO!`)
     const url = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
       shareUrl,
     )}&title=${title}&summary=${summary}`
@@ -226,3 +212,6 @@ export default function ShareProject({
     </Dialog>
   )
 }
+
+// Default export for backward compatibility
+export default ShareProject

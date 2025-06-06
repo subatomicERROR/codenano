@@ -1,34 +1,42 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
 
-// Create a single supabase client for the browser
-let browserClient: ReturnType<typeof createClient> | null = null
+// Create a single browser client instance
+let browserClient: ReturnType<typeof createClientComponentClient> | null = null
 
 export const getBrowserClient = () => {
   if (typeof window === "undefined") {
-    // Server-side - create a new client each time
-    return createBrowserClient()
+    throw new Error("getBrowserClient should only be called on the client side")
   }
 
-  // Client-side - use singleton pattern
+  // Use singleton pattern to prevent multiple instances
   if (!browserClient) {
-    browserClient = createBrowserClient()
+    browserClient = createClientComponentClient({
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    })
   }
   return browserClient
 }
 
+// For client components
 export const createBrowserClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://sgvfezfvxehegyrwsrrr.supabase.co"
-  const supabaseAnonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNndmZlemZ2eGVoZWd5cndzcnJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2MDAzMjcsImV4cCI6MjA2MjE3NjMyN30.T8OePMHe_tbRT9QCDDPC4z0lK_dqYynfwaRkrgQK9vQ"
-
-  return createClient(supabaseUrl, supabaseAnonKey)
+  return createClientComponentClient({
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  })
 }
 
-// Create a server client
+// For server components and API routes
 export const createServerClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://sgvfezfvxehegyrwsrrr.supabase.co"
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+  if (typeof window !== "undefined") {
+    throw new Error("createServerClient should only be called on the server side")
+  }
 
-  return createClient(supabaseUrl, supabaseServiceKey)
+  return createRouteHandlerClient({
+    cookies,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  })
 }

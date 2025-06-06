@@ -98,20 +98,18 @@ export default function CreateProjectModal({ open, onOpenChange }: CreateProject
               {projectTemplates.map((template) => (
                 <div
                   key={template.id}
-                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                  className={`p-6 border-2 rounded-xl cursor-pointer transition-all hover:scale-105 ${
                     selectedTemplate === template.id
-                      ? "border-[#00ff88] bg-[#00ff88]/10"
+                      ? "border-[#00ff88] bg-[#00ff88]/10 shadow-lg"
                       : "border-[#333333] hover:border-[#555555] bg-[#0a0a0a]"
                   }`}
                   onClick={() => setSelectedTemplate(template.id)}
                 >
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">{template.icon}</span>
-                    <h3 className="font-semibold">{template.name}</h3>
-                  </div>
-                  <p className="text-sm text-gray-400">{template.description}</p>
-                  <div className="mt-2">
-                    <span className="text-xs bg-[#333333] px-2 py-1 rounded">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="text-5xl mb-3">{template.icon}</div>
+                    <h3 className="font-bold text-lg mb-2">{template.name}</h3>
+                    <p className="text-sm text-gray-400 mb-3">{template.description}</p>
+                    <span className="text-xs bg-[#333333] px-3 py-1 rounded-full">
                       {languageConfigs[template.mode].name}
                     </span>
                   </div>

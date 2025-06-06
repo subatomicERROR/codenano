@@ -169,18 +169,19 @@ document.addEventListener('DOMContentLoaded', function() {
   {
     id: "react-starter",
     name: "React App",
-    description: "Modern React application with hooks",
+    description: "Modern React application with hooks and components",
     mode: "react" as LanguageMode,
     icon: "⚛️",
     files: [
       {
         name: "App.jsx",
         content: `import React, { useState, useEffect } from 'react';
-import './App.css';
 
 function App() {
   const [count, setCount] = useState(0);
   const [message, setMessage] = useState('Welcome to React!');
+  const [todos, setTodos] = useState([]);
+  const [newTodo, setNewTodo] = useState('');
 
   useEffect(() => {
     document.title = \`Count: \${count}\`;
@@ -193,342 +194,264 @@ function App() {
     }
   };
 
+  const addTodo = () => {
+    if (newTodo.trim()) {
+      setTodos([...todos, { id: Date.now(), text: newTodo, completed: false }]);
+      setNewTodo('');
+    }
+  };
+
+  const toggleTodo = (id) => {
+    setTodos(todos.map(todo => 
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+
+  const removeTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>⚛️ React Playground</h1>
-        <p>{message}</p>
-        <div className="counter">
-          <button onClick={() => setCount(count - 1)}>-</button>
-          <span className="count">{count}</span>
-          <button onClick={handleIncrement}>+</button>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #61dafb 0%, #21232a 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    }}>
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.95)',
+        padding: '2rem',
+        borderRadius: '20px',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+        textAlign: 'center',
+        maxWidth: '500px',
+        width: '100%'
+      }}>
+        <h1 style={{ color: '#21232a', fontSize: '2.5rem', marginBottom: '1rem' }}>
+          ⚛️ React Playground
+        </h1>
+        <p style={{ color: '#666', marginBottom: '2rem' }}>{message}</p>
+        
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', margin: '2rem 0' }}>
+          <button 
+            onClick={() => setCount(count - 1)}
+            style={{
+              background: '#61dafb',
+              color: '#21232a',
+              border: 'none',
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              fontSize: '1.5rem',
+              cursor: 'pointer'
+            }}
+          >-</button>
+          <span style={{ fontSize: '2rem', fontWeight: 'bold', minWidth: '60px' }}>{count}</span>
+          <button 
+            onClick={handleIncrement}
+            style={{
+              background: '#61dafb',
+              color: '#21232a',
+              border: 'none',
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              fontSize: '1.5rem',
+              cursor: 'pointer'
+            }}
+          >+</button>
         </div>
-        <p className="hint">
-          Edit <code>App.jsx</code> and save to see changes!
+
+        <div style={{ textAlign: 'left', margin: '2rem 0' }}>
+          <h3>Quick Todo</h3>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+            <input
+              value={newTodo}
+              onChange={(e) => setNewTodo(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addTodo()}
+              placeholder="Add a todo..."
+              style={{
+                flex: 1,
+                padding: '0.5rem',
+                border: '2px solid #61dafb',
+                borderRadius: '5px',
+                outline: 'none'
+              }}
+            />
+            <button
+              onClick={addTodo}
+              style={{
+                background: '#61dafb',
+                color: '#21232a',
+                border: 'none',
+                padding: '0.5rem 1rem',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+            >Add</button>
+          </div>
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            {todos.map(todo => (
+              <li key={todo.id} style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '0.5rem',
+                borderBottom: '1px solid #eee'
+              }}>
+                <span
+                  onClick={() => toggleTodo(todo.id)}
+                  style={{
+                    cursor: 'pointer',
+                    flex: 1,
+                    textDecoration: todo.completed ? 'line-through' : 'none',
+                    opacity: todo.completed ? 0.6 : 1
+                  }}
+                >
+                  {todo.text}
+                </span>
+                <button
+                  onClick={() => removeTodo(todo.id)}
+                  style={{
+                    background: '#e74c3c',
+                    color: 'white',
+                    border: 'none',
+                    width: '25px',
+                    height: '25px',
+                    borderRadius: '50%',
+                    cursor: 'pointer'
+                  }}
+                >×</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+        
+        <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '1rem' }}>
+          Edit <code style={{ background: '#f0f0f0', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>App.jsx</code> and save to see changes!
         </p>
-      </header>
+      </div>
     </div>
   );
 }
 
-export default App;`,
+ReactDOM.render(<App />, document.getElementById('root'));`,
         language: "jsx",
-      },
-      {
-        name: "App.css",
-        content: `.app {
-  text-align: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #61dafb 0%, #21232a 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.app-header {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2rem;
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-  color: white;
-  max-width: 500px;
-}
-
-h1 {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-.counter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin: 2rem 0;
-}
-
-.counter button {
-  background: #61dafb;
-  color: #21232a;
-  border: none;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.counter button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 5px 15px rgba(97, 218, 251, 0.4);
-}
-
-.count {
-  font-size: 2rem;
-  font-weight: bold;
-  min-width: 60px;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-}
-
-.hint {
-  font-size: 0.9rem;
-  opacity: 0.8;
-  margin-top: 1rem;
-}
-
-code {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
-}`,
-        language: "css",
-      },
-      {
-        name: "index.js",
-        content: `import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);`,
-        language: "javascript",
       },
     ],
   },
   {
     id: "vue-starter",
     name: "Vue.js App",
-    description: "Vue 3 application with Composition API",
+    description: "Vue 3 application with Composition API and reactivity",
     mode: "vue" as LanguageMode,
     icon: "💚",
     files: [
       {
         name: "App.vue",
-        content: `<template>
-  <div class="app">
-    <div class="container">
-      <h1>💚 Vue.js Playground</h1>
-      <p>{{ message }}</p>
-      
-      <div class="counter">
-        <button @click="decrement">-</button>
-        <span class="count">{{ count }}</span>
-        <button @click="increment">+</button>
-      </div>
-      
-      <div class="todo-section">
-        <h3>Quick Todo</h3>
-        <div class="todo-input">
-          <input 
-            v-model="newTodo" 
-            @keyup.enter="addTodo"
-            placeholder="Add a todo..."
-          />
-          <button @click="addTodo">Add</button>
+        content: `const { createApp, ref, computed, onMounted } = Vue;
+
+createApp({
+  setup() {
+    const count = ref(0);
+    const newTodo = ref('');
+    const todos = ref([]);
+
+    const message = computed(() => {
+      if (count.value >= 10) return '🎉 Great job clicking!';
+      return 'Welcome to Vue.js!';
+    });
+
+    const increment = () => {
+      count.value++;
+    };
+
+    const decrement = () => {
+      count.value--;
+    };
+
+    const addTodo = () => {
+      if (newTodo.value.trim()) {
+        todos.value.push({
+          id: Date.now(),
+          text: newTodo.value,
+          completed: false
+        });
+        newTodo.value = '';
+      }
+    };
+
+    const toggleTodo = (id) => {
+      const todo = todos.value.find(t => t.id === id);
+      if (todo) todo.completed = !todo.completed;
+    };
+
+    const removeTodo = (id) => {
+      todos.value = todos.value.filter(t => t.id !== id);
+    };
+
+    onMounted(() => {
+      console.log('💚 Vue.js app mounted!');
+    });
+
+    return {
+      count,
+      newTodo,
+      todos,
+      message,
+      increment,
+      decrement,
+      addTodo,
+      toggleTodo,
+      removeTodo
+    };
+  },
+
+  template: \`
+    <div style="min-height: 100vh; background: linear-gradient(135deg, #42b883 0%, #35495e 100%); display: flex; align-items: center; justify-content: center; padding: 2rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+      <div style="background: rgba(255, 255, 255, 0.95); padding: 2rem; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: center; max-width: 500px; width: 100%;">
+        <h1 style="color: #35495e; margin-bottom: 1rem; font-size: 2.5rem;">💚 Vue.js Playground</h1>
+        <p style="color: #666; margin-bottom: 2rem;">{{ message }}</p>
+        
+        <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 2rem 0;">
+          <button @click="decrement" style="background: #42b883; color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.5rem; cursor: pointer;">-</button>
+          <span style="font-size: 2rem; font-weight: bold; min-width: 60px; padding: 0.5rem; background: #f0f0f0; border-radius: 10px;">{{ count }}</span>
+          <button @click="increment" style="background: #42b883; color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.5rem; cursor: pointer;">+</button>
         </div>
-        <ul class="todo-list">
-          <li v-for="todo in todos" :key="todo.id" class="todo-item">
-            <span :class="{ completed: todo.completed }" @click="toggleTodo(todo.id)">
-              {{ todo.text }}
-            </span>
-            <button @click="removeTodo(todo.id)" class="remove-btn">×</button>
-          </li>
-        </ul>
+        
+        <div style="margin: 2rem 0; text-align: left;">
+          <h3>Quick Todo</h3>
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+            <input 
+              v-model="newTodo" 
+              @keyup.enter="addTodo"
+              placeholder="Add a todo..."
+              style="flex: 1; padding: 0.5rem; border: 2px solid #42b883; border-radius: 5px; outline: none;"
+            />
+            <button @click="addTodo" style="background: #42b883; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">Add</button>
+          </div>
+          <ul style="list-style: none; padding: 0;">
+            <li v-for="todo in todos" :key="todo.id" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid #eee;">
+              <span 
+                @click="toggleTodo(todo.id)" 
+                :style="{ cursor: 'pointer', flex: 1, textDecoration: todo.completed ? 'line-through' : 'none', opacity: todo.completed ? 0.6 : 1 }"
+              >
+                {{ todo.text }}
+              </span>
+              <button @click="removeTodo(todo.id)" style="background: #e74c3c; color: white; border: none; width: 25px; height: 25px; border-radius: 50%; cursor: pointer;">×</button>
+            </li>
+          </ul>
+        </div>
+        
+        <p style="font-size: 0.9rem; color: #666; margin-top: 1rem;">
+          Edit <code style="background: #f0f0f0; padding: 0.2rem 0.5rem; border-radius: 4px;">App.vue</code> and save to see changes!
+        </p>
       </div>
-      
-      <p class="hint">
-        Edit <code>App.vue</code> and save to see changes!
-      </p>
     </div>
-  </div>
-</template>
-
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-
-const count = ref(0)
-const newTodo = ref('')
-const todos = ref([])
-
-const message = computed(() => {
-  if (count.value >= 10) return '🎉 Great job clicking!'
-  return 'Welcome to Vue.js!'
-})
-
-const increment = () => {
-  count.value++
-}
-
-const decrement = () => {
-  count.value--
-}
-
-const addTodo = () => {
-  if (newTodo.value.trim()) {
-    todos.value.push({
-      id: Date.now(),
-      text: newTodo.value,
-      completed: false
-    })
-    newTodo.value = ''
-  }
-}
-
-const toggleTodo = (id) => {
-  const todo = todos.value.find(t => t.id === id)
-  if (todo) todo.completed = !todo.completed
-}
-
-const removeTodo = (id) => {
-  todos.value = todos.value.filter(t => t.id !== id)
-}
-
-onMounted(() => {
-  console.log('💚 Vue.js app mounted!')
-})
-</script>
-
-<style scoped>
-.app {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #42b883 0%, #35495e 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-}
-
-.container {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 2rem;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-  text-align: center;
-  max-width: 500px;
-  width: 100%;
-}
-
-h1 {
-  color: #35495e;
-  margin-bottom: 1rem;
-  font-size: 2.5rem;
-}
-
-.counter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin: 2rem 0;
-}
-
-.counter button {
-  background: #42b883;
-  color: white;
-  border: none;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.counter button:hover {
-  background: #369870;
-  transform: scale(1.1);
-}
-
-.count {
-  font-size: 2rem;
-  font-weight: bold;
-  min-width: 60px;
-  padding: 0.5rem;
-  background: #f0f0f0;
-  border-radius: 10px;
-}
-
-.todo-section {
-  margin: 2rem 0;
-  text-align: left;
-}
-
-.todo-input {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.todo-input input {
-  flex: 1;
-  padding: 0.5rem;
-  border: 2px solid #42b883;
-  border-radius: 5px;
-  outline: none;
-}
-
-.todo-input button {
-  background: #42b883;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.todo-list {
-  list-style: none;
-  padding: 0;
-}
-
-.todo-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem;
-  border-bottom: 1px solid #eee;
-}
-
-.todo-item span {
-  cursor: pointer;
-  flex: 1;
-}
-
-.completed {
-  text-decoration: line-through;
-  opacity: 0.6;
-}
-
-.remove-btn {
-  background: #e74c3c;
-  color: white;
-  border: none;
-  width: 25px;
-  height: 25px;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.hint {
-  font-size: 0.9rem;
-  color: #666;
-  margin-top: 1rem;
-}
-
-code {
-  background: #f0f0f0;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
-}
-</style>`,
+  \`
+}).mount('#app');`,
         language: "vue",
       },
     ],
@@ -536,7 +459,7 @@ code {
   {
     id: "nextjs-starter",
     name: "Next.js App",
-    description: "Full-stack Next.js application",
+    description: "Full-stack Next.js application with modern features",
     mode: "nextjs" as LanguageMode,
     icon: "▲",
     files: [
@@ -545,49 +468,180 @@ code {
         content: `'use client'
 
 import { useState, useEffect } from 'react'
-import styles from './page.module.css'
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [count, setCount] = useState(0)
   const [posts, setPosts] = useState([])
+  const [newPost, setNewPost] = useState('')
 
   useEffect(() => {
     setMounted(true)
     // Simulate API call
     setTimeout(() => {
       setPosts([
-        { id: 1, title: 'Welcome to Next.js!', content: 'This is your first post.' },
-        { id: 2, title: 'Server-Side Rendering', content: 'Next.js provides SSR out of the box.' },
-        { id: 3, title: 'API Routes', content: 'Build full-stack apps with API routes.' }
+        { id: 1, title: 'Welcome to Next.js!', content: 'This is your first post with server-side rendering.' },
+        { id: 2, title: 'API Routes', content: 'Build full-stack apps with built-in API routes.' },
+        { id: 3, title: 'Performance', content: 'Optimized for speed with automatic code splitting.' }
       ])
     }, 1000)
   }, [])
 
+  const addPost = () => {
+    if (newPost.trim()) {
+      setPosts([...posts, {
+        id: Date.now(),
+        title: newPost,
+        content: 'This is a new post created dynamically!'
+      }])
+      setNewPost('')
+    }
+  }
+
   if (!mounted) return null
 
   return (
-    <div className={styles.container}>
-      <main className={styles.main}>
-        <h1 className={styles.title}>
+    <div style={{
+      padding: '0 2rem',
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)',
+      color: 'white',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    }}>
+      <main style={{
+        minHeight: '100vh',
+        padding: '4rem 0',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <h1 style={{
+          margin: 0,
+          lineHeight: 1.15,
+          fontSize: '4rem',
+          textAlign: 'center',
+          background: 'linear-gradient(45deg, #ffffff, #888888)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
           ▲ Welcome to Next.js!
         </h1>
 
-        <p className={styles.description}>
-          Get started by editing <code className={styles.code}>page.js</code>
+        <p style={{
+          margin: '4rem 0',
+          lineHeight: 1.5,
+          fontSize: '1.5rem',
+          textAlign: 'center'
+        }}>
+          Get started by editing <code style={{
+            background: '#333',
+            borderRadius: '5px',
+            padding: '0.75rem',
+            fontSize: '1.1rem',
+            fontFamily: 'Menlo, Monaco, "Courier New", monospace'
+          }}>page.js</code>
         </p>
 
-        <div className={styles.counter}>
-          <button onClick={() => setCount(count - 1)}>-</button>
-          <span>{count}</span>
-          <button onClick={() => setCount(count + 1)}>+</button>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          margin: '2rem 0'
+        }}>
+          <button 
+            onClick={() => setCount(count - 1)}
+            style={{
+              background: 'white',
+              color: 'black',
+              border: 'none',
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              fontSize: '1.5rem',
+              cursor: 'pointer'
+            }}
+          >-</button>
+          <span style={{
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            minWidth: '60px',
+            textAlign: 'center'
+          }}>{count}</span>
+          <button 
+            onClick={() => setCount(count + 1)}
+            style={{
+              background: 'white',
+              color: 'black',
+              border: 'none',
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              fontSize: '1.5rem',
+              cursor: 'pointer'
+            }}
+          >+</button>
         </div>
 
-        <div className={styles.grid}>
+        <div style={{ margin: '2rem 0', textAlign: 'center' }}>
+          <h3>Add New Post</h3>
+          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+            <input
+              value={newPost}
+              onChange={(e) => setNewPost(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addPost()}
+              placeholder="Enter post title..."
+              style={{
+                padding: '0.5rem',
+                border: '1px solid #333',
+                borderRadius: '5px',
+                background: '#1a1a1a',
+                color: 'white',
+                outline: 'none'
+              }}
+            />
+            <button
+              onClick={addPost}
+              style={{
+                background: 'white',
+                color: 'black',
+                border: 'none',
+                padding: '0.5rem 1rem',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+            >Add Post</button>
+          </div>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          maxWidth: '800px',
+          gap: '1rem'
+        }}>
           {posts.map(post => (
-            <div key={post.id} className={styles.card}>
-              <h3>{post.title}</h3>
-              <p>{post.content}</p>
+            <div key={post.id} style={{
+              margin: '1rem',
+              padding: '1.5rem',
+              textAlign: 'left',
+              border: '1px solid #333',
+              borderRadius: '10px',
+              maxWidth: '300px',
+              background: 'rgba(255, 255, 255, 0.05)'
+            }}>
+              <h3 style={{
+                margin: '0 0 1rem 0',
+                fontSize: '1.5rem'
+              }}>{post.title}</h3>
+              <p style={{
+                margin: 0,
+                fontSize: '1.25rem',
+                lineHeight: 1.5,
+                opacity: 0.8
+              }}>{post.content}</p>
             </div>
           ))}
         </div>
@@ -598,125 +652,10 @@ export default function Home() {
         language: "javascript",
       },
       {
-        name: "page.module.css",
-        content: `.container {
-  padding: 0 2rem;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-  color: white;
-}
-
-.main {
-  min-height: 100vh;
-  padding: 4rem 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.title {
-  margin: 0;
-  line-height: 1.15;
-  font-size: 4rem;
-  text-align: center;
-  background: linear-gradient(45deg, #ffffff, #888888);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.description {
-  margin: 4rem 0;
-  line-height: 1.5;
-  font-size: 1.5rem;
-  text-align: center;
-}
-
-.code {
-  background: #333;
-  border-radius: 5px;
-  padding: 0.75rem;
-  font-size: 1.1rem;
-  font-family: Menlo, Monaco, 'Courier New', monospace;
-}
-
-.counter {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 2rem 0;
-}
-
-.counter button {
-  background: white;
-  color: black;
-  border: none;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.counter button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
-}
-
-.counter span {
-  font-size: 2rem;
-  font-weight: bold;
-  min-width: 60px;
-  text-align: center;
-}
-
-.grid {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  max-width: 800px;
-  gap: 1rem;
-}
-
-.card {
-  margin: 1rem;
-  padding: 1.5rem;
-  text-align: left;
-  color: inherit;
-  text-decoration: none;
-  border: 1px solid #333;
-  border-radius: 10px;
-  transition: color 0.15s ease, border-color 0.15s ease;
-  max-width: 300px;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.card:hover {
-  border-color: #666;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.card h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-}
-
-.card p {
-  margin: 0;
-  font-size: 1.25rem;
-  line-height: 1.5;
-  opacity: 0.8;
-}`,
-        language: "css",
-      },
-      {
         name: "layout.js",
         content: `export const metadata = {
   title: 'Next.js Playground',
-  description: 'A Next.js application playground',
+  description: 'A Next.js application playground with CodeNANO',
 }
 
 export default function RootLayout({ children }) {
