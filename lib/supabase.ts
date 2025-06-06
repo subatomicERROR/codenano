@@ -1,6 +1,5 @@
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
 
 // Create a single browser client instance
 let browserClient: ReturnType<typeof createClientComponentClient> | null = null
@@ -33,6 +32,9 @@ export const createServerClient = () => {
   if (typeof window !== "undefined") {
     throw new Error("createServerClient should only be called on the server side")
   }
+
+  // Import cookies only when needed on the server
+  const { cookies } = require("next/headers")
 
   return createRouteHandlerClient({
     cookies,
